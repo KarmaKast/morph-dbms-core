@@ -1,0 +1,38 @@
+Truthy statements to build context
+> Each Node is meant to hold the smallest amount of data
+> The meaning arises is the relational web
+> Relation:
+>   Relation could be Unidirectional or Bidirectional
+>   Relation is a object that the node refers to.
+>   If both nodes of relation refer to that relation obj then it is valid. Otherwise the one that refers to it is considered as requesting/assuming.
+
+
+
+Goals:
+> To model real world data in a more meaningful way. In real world meaning is in relation not state. (opinion)
+> If done right, this library could be used to model a dictionary in a more elegant way. Or maybe some other use case.
+
+Thoughts:
+> Example: name is a property of something. name is also a thing by itself. name is a word. word is a property of name. word is also a recursive property.
+> So property is just a node where it only considered a property is a give context.
+> What would the smallest node look like?
+    Smallest node shouldnt be related to anything and just store data.
+    Example: 
+        Node_Obj: Bill
+            properties:
+                Date and time
+                Items count
+                Total price
+                Payment method/details
+
+            Relations:
+                To:
+                    Items (Node_Obj list)
+        
+        Node_Obj: Item
+            properties:
+                name and/or description
+                Category
+> difference between a property and a node. property is just a format. node is information.
+
+
