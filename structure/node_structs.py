@@ -1,11 +1,16 @@
-from typing import NamedTuple, List, Any
+from typing import List, Any
 from dataclasses import dataclass
 
 #import relations_struct
-
+@dataclass
+class node_ID:
+    ID : str
+    node_name : str
+    
 @dataclass
 class node_struct:
-    data: Any
+    node_ID : node_ID
+    data: dict
     relations: List['relation_struct']
 
 @dataclass
@@ -16,3 +21,5 @@ class relation_struct:
     rel_from_to_to : str
     rel_to_to_from : str
 
+
+    
