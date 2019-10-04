@@ -15,7 +15,8 @@
 from typing import List, Any
 from dataclasses import dataclass
 
-#import relations_struct
+import nodeLib
+
 @dataclass
 class node_ID:
     ID : str
@@ -29,8 +30,8 @@ class node_struct:
 
 @dataclass
 class relation_struct:
-    from_node : node_struct
-    to_node : node_struct
+    from_node : nodeLib.node.Node
+    to_node : nodeLib.node.Node
     # what is the first node to the second node
     rel_from_to_to : str
     rel_to_to_from : str

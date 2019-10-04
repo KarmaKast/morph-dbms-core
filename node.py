@@ -14,8 +14,9 @@
 
 from typing import List, Any
 
-#from nodeLib.structure import node_struct 
-from .structure import node_structs
+#from .structure import node_structs
+#from nodeLib.structure import node_structs
+import nodeLib
 
 class properties:
     """
@@ -42,19 +43,20 @@ class Node:
         #    relations = []
         #)
         node_ID = None
-        if "node_ID" in kwargs.keys():
-            node_ID = node_structs.node_ID(
-                **kwargs['node_ID']
+        if {"node_ID"}.issubset(kwargs.keys()):
+            node_ID = nodeLib.structure.node_structs.node_ID(
+                ID = kwargs['node_ID']['ID'],
+                node_name = kwargs['node_ID']['node_name']
                 )
-        self.node_data = node_structs.node_struct(
+        self.node_data = nodeLib.structure.node_structs.node_struct(
             node_ID = node_ID,
             data = kwargs["data"] if ("data") in kwargs.keys() else {},
-            relations = node_structs(kwargs["relations"]) if ("relations") in kwargs.keys() else []
+            relations = nodeLib.structure.node_structs(kwargs["relations"]) if ("relations") in kwargs.keys() else []
         )
         
     def add_relations(self, nodes, rel_from_to_to = None, rel_to_to_from = None, **kwargs):
         def add_relation(to_node , rel_from_to_to = None, rel_to_to_from = None):
-            relation = node_structs.relation_struct(
+            relation = nodeLib.structure.node_structs.relation_struct(
                 from_node = self,
                 to_node = to_node,
                 rel_from_to_to = rel_from_to_to,
@@ -76,17 +78,34 @@ class Node:
         relations
         """
         node_ = Node(node_ID = kwargs["node_ID"])
-        node_.add_relations(
-            nodes = [self],
-            rel_from_to_to = kwargs['rel_to_to_from'],
-            rel_to_to_from = kwargs['rel_from_to_to']
-        )
-        self.add_relations(
-            nodes = [node_],
-            rel_from_to_to = kwargs['rel_from_to_to'],
-            rel_to_to_from = kwargs['rel_to_to_from']
+        if {'rel_to_to_from','rel_from_to_to'}.issubset(set(kwargs.keys())):
+            node_.add_relations(
+                nodes = [self],
+                rel_from_to_to = kwargs['rel_to_to_from'],
+                rel_to_to_from = kwargs['rel_from_to_to']
             )
+            self.add_relations(
+                nodes = [node_],
+                rel_from_to_to = kwargs['rel_from_to_to'],
+                rel_to_to_from = kwargs['rel_to_to_from']
+                )
+        if {'data'}.issubset(set(kwargs.keys())):
+            node_.node_data.data.update(kwargs['data'])
+            
+        return node_
     
+    def get_rel_node(self, location: List[int]):
+            node_ = self.node_data.relations[location[0]].to_node
+            for i in location[1:]:
+                node_ = node_.node_data.relations[i]
+            return node_
+        
+    def get_rel_nodes(self, locations: List[List[int]]):
+        nodes_ = []
+        for location in locations:
+            nodes_.append(self.get_rel_node(location))
+        
+        return nodes_
     
     def packed(self, relation_type="member", include_self=True):
         """
@@ -109,7 +128,7 @@ class Node:
         print("---- DATA ----")
         for _ in self.node_data.data.items():
             print(_[0], " : ", _[1])
-        print("---- RELATION ----")
+        print("---- RELATIONS ----")
         for count,_ in enumerate(self.node_data.relations):
             print("\n-- relation ",count," :")
             print('from_node')
