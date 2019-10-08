@@ -14,25 +14,33 @@
 
 from typing import List, Any
 
-#from .structure import node_structs
-#from nodeLib.structure import node_structs
+#from .structure2 import node_structs
+#from nodeLib.structure2 import node_structs
 import nodeLib
-
-class properties:
-    """
-    
-    """
-    pass
     
 class NodePack:
-    pass
+    @staticmethod
+    def pack(node_, include_self=True, **kwargs):
+        """
+        Given a Node return a packet containing all the nodes related to it and itself.
+        """
+        packet = []
+        if include_self:
+            packet.append(node_)
+            
+        for relation_ in node_.relations:
+            if relation_.rel_to_to_from == kwargs['relation_type']:
+                packet.append(relation_.to_node)
+        
+        #return packet
+        return packet
     
-class Relations:
+class Node_Manager:
     def __init__(self, **kwargs):
         pass
-    
-class Node:
-    def __init__(self, **kwargs):
+        
+    @staticmethod
+    def create_node(**kwargs):
         """[kwargs]
         node_ID
         data
@@ -44,99 +52,111 @@ class Node:
         #)
         node_ID = None
         if {"node_ID"}.issubset(kwargs.keys()):
-            node_ID = nodeLib.structure.node_structs.node_ID(
+            node_ID = nodeLib.structure2.node_structs.Node_ID(
                 ID = kwargs['node_ID']['ID'],
                 node_name = kwargs['node_ID']['node_name']
                 )
-        self.node_data = nodeLib.structure.node_structs.node_struct(
+        node = nodeLib.structure2.node_structs.Node_Struct(
             node_ID = node_ID,
             data = kwargs["data"] if ("data") in kwargs.keys() else {},
-            relations = nodeLib.structure.node_structs(kwargs["relations"]) if ("relations") in kwargs.keys() else []
+            relations = nodeLib.structure2.node_structs(kwargs["relations"]) if ("relations") in kwargs.keys() else []
         )
+        return node
         
-    def add_relations(self, nodes, rel_from_to_to = None, rel_to_to_from = None, **kwargs):
-        def add_relation(to_node , rel_from_to_to = None, rel_to_to_from = None):
-            relation = nodeLib.structure.node_structs.relation_struct(
-                from_node = self,
+    @staticmethod
+    def claim_relations(from_node, to_nodes:list, rel_from_to_to = None, rel_to_to_from = None):
+        def add_relation(from_node, to_node , rel_from_to_to = None, rel_to_to_from = None):
+            relation = nodeLib.structure2.node_structs.Relation_Struct(
+                from_node = from_node,
                 to_node = to_node,
                 rel_from_to_to = rel_from_to_to,
                 rel_to_to_from = rel_to_to_from
             )
-            self.node_data.relations.append(relation)
-        for to_node_ in nodes:
-            add_relation(to_node = to_node_, rel_from_to_to=rel_from_to_to, rel_to_to_from = rel_to_to_from)
-                
-    def create_node(self, **kwargs):
+            from_node.relations.append(relation)
+        for to_node_ in to_nodes:
+            add_relation(from_node, to_node_, rel_from_to_to, rel_to_to_from)
+           
+    @staticmethod
+    def accept_relations(node_, from_nodes):
+        for from_node in from_nodes:
+            for relation in from_node.relations:
+                if relation.to_node == node_:
+                    Node_Manager.claim_relations(from_node = node_, to_nodes = [relation.from_node], rel_from_to_to=relation.rel_to_to_from, rel_to_to_from = relation.rel_from_to_to)
+                    #print("DEBUG", relation)
+                    
+    @staticmethod
+    def create_related_node(**kwargs):
         """
-            create a new node related to this node. So that a node can be created without having to create a variable.
+            use create_node() and then add relations btw them
         """
         """[kwargs]
+        from_node
         node_ID
         rel_from_to_to
         rel_to_to_from
-        data
-        relations
+        
+        #data
+        #relations
         """
-        node_ = Node(node_ID = kwargs["node_ID"])
-        if {'rel_to_to_from','rel_from_to_to'}.issubset(set(kwargs.keys())):
-            node_.add_relations(
-                nodes = [self],
-                rel_from_to_to = kwargs['rel_to_to_from'],
-                rel_to_to_from = kwargs['rel_from_to_to']
-            )
-            self.add_relations(
-                nodes = [node_],
+        new_node_ = Node_Manager.create_node(node_ID = kwargs["node_ID"])
+        if {'from_node','rel_to_to_from','rel_from_to_to'}.issubset(set(kwargs.keys())):
+            Node_Manager.claim_relations(
+                from_node = kwargs['from_node'],
+                to_nodes = [new_node_],
                 rel_from_to_to = kwargs['rel_from_to_to'],
                 rel_to_to_from = kwargs['rel_to_to_from']
                 )
+            Node_Manager.claim_relations(
+                from_node = new_node_,
+                to_nodes = [kwargs['from_node']],
+                rel_from_to_to = kwargs['rel_to_to_from'],
+                rel_to_to_from = kwargs['rel_from_to_to']
+            )
         if {'data'}.issubset(set(kwargs.keys())):
-            node_.node_data.data.update(kwargs['data'])
+            new_node_.node_data.data.update(kwargs['data'])
             
-        return node_
+        return new_node_
     
-    def get_rel_node(self, location: List[int]):
-            node_ = self.node_data.relations[location[0]].to_node
+    @staticmethod
+    def get_rel_node(node_, location: List[int]):
+            node_ = node_.relations[location[0]].to_node
             for i in location[1:]:
-                node_ = node_.node_data.relations[i]
+                node_ = node_.relations[i].to_node
             return node_
-        
-    def get_rel_nodes(self, locations: List[List[int]]):
+    
+    @staticmethod
+    def get_rel_nodes(node_, locations: List[List[int]]):
         nodes_ = []
         for location in locations:
-            nodes_.append(self.get_rel_node(location))
+            nodes_.append(Node_Manager.get_rel_node(node_, location))
         
         return nodes_
     
-    def packed(self, relation_type="member", include_self=True):
-        """
-        Given a Node return a packet containing all the nodes related to it and itself.
-        """
-        packet = []
-        if include_self:
-            packet.append(self)
-            
-        for relation_ in self.node_data.relations:
-            if relation_.rel_to_to_from == relation_type:
-                packet.append(relation_.to_node)
-        
-        #return packet
-        return packet
-    
-    def describe(self):
+class Debug_Node:
+    @staticmethod
+    def describe(node_, mode:str = None):
         # describe self.node_data
-        print(self.node_data.node_ID)
-        print("---- DATA ----")
-        for _ in self.node_data.data.items():
-            print(_[0], " : ", _[1])
-        print("---- RELATIONS ----")
-        for count,_ in enumerate(self.node_data.relations):
-            print("\n-- relation ",count," :")
-            print('from_node')
-            print('   ', _.from_node, '  ', _.from_node.node_data.node_ID)
-            print('to_node')
-            print('   ', _.to_node, '  ', _.to_node.node_data.node_ID)
-            print('rel_from_to_to = ', _.rel_from_to_to)
-            print('rel_to_to_from = ', _.rel_to_to_from)
-    
-    
+        if mode == 'compact':
+            print(node_.node_ID)
+            print("---- DATA ----")
+            print(node_.data)
+            print("---- RELATIONS ----")
+            for count,_ in enumerate(node_.relations):
+                print("\n-- relation ",count," :")
+                #print('from_node : ', _.from_node.node_ID)
+                print('to_node : ',  _.to_node.node_ID)
+                print('rel_from_to_to = ', _.rel_from_to_to, ' | rel_to_to_from = ', _.rel_to_to_from)
+        else:
+            print(node_.node_ID)
+            print("---- DATA ----")
+            for _ in node_.data.items():
+                print(_[0], " : ", _[1])
+            print("---- RELATIONS ----")
+            for count,_ in enumerate(node_.relations):
+                print("\n-- relation ",count," :")
+                print('from_node')
+                print( _.from_node.node_ID)
+                print('to_node')
+                print(_.to_node.node_ID)
+                print('rel_from_to_to = ', _.rel_from_to_to, ' | rel_to_to_from = ', _.rel_to_to_from)
  

@@ -15,26 +15,22 @@
 from typing import List, Any
 from dataclasses import dataclass
 
-import nodeLib
-
 @dataclass
-class node_ID:
+class Node_ID:
     ID : str
     node_name : str
     
 @dataclass
-class node_struct:
-    node_ID : node_ID
+class Node_Struct:
+    node_ID : Node_ID
     data: dict
-    relations: List['relation_struct']
+    relations: List['Relation_Struct']
+    #nodeLib.structure2.relation_struct.Relation_Struct
 
 @dataclass
-class relation_struct:
-    from_node : nodeLib.node.Node
-    to_node : nodeLib.node.Node
+class Relation_Struct:
+    from_node : Node_Struct
+    to_node : Node_Struct
     # what is the first node to the second node
     rel_from_to_to : str
     rel_to_to_from : str
-
-
-    
