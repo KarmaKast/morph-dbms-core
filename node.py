@@ -14,8 +14,8 @@
 
 from typing import List, Any
 
-#from .structure2 import node_structs
-#from nodeLib.structure2 import node_structs
+#from .structure import node_structs
+#from nodeLib.structure import node_structs
 import nodeLib
     
 class NodePack:
@@ -52,21 +52,21 @@ class Node_Manager:
         #)
         node_ID = None
         if {"node_ID"}.issubset(kwargs.keys()):
-            node_ID = nodeLib.structure2.node_structs.Node_ID(
+            node_ID = nodeLib.structure.node_structs.Node_ID(
                 ID = kwargs['node_ID']['ID'],
                 node_name = kwargs['node_ID']['node_name']
                 )
-        node = nodeLib.structure2.node_structs.Node_Struct(
+        node = nodeLib.structure.node_structs.Node_Struct(
             node_ID = node_ID,
             data = kwargs["data"] if ("data") in kwargs.keys() else {},
-            relations = nodeLib.structure2.node_structs(kwargs["relations"]) if ("relations") in kwargs.keys() else []
+            relations = nodeLib.structure.node_structs(kwargs["relations"]) if ("relations") in kwargs.keys() else []
         )
         return node
         
     @staticmethod
     def claim_relations(from_node, to_nodes:list, rel_from_to_to = None, rel_to_to_from = None):
         def add_relation(from_node, to_node , rel_from_to_to = None, rel_to_to_from = None):
-            relation = nodeLib.structure2.node_structs.Relation_Struct(
+            relation = nodeLib.structure.node_structs.Relation_Struct(
                 from_node = from_node,
                 to_node = to_node,
                 rel_from_to_to = rel_from_to_to,
