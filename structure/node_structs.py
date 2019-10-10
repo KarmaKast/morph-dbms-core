@@ -12,25 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Any
+from typing import List, Any, Union
 from dataclasses import dataclass
+from collections import namedtuple
 
 @dataclass
-class Node_ID:
+class Node_ID_Struct:
     ID : str
     node_name : str
     
 @dataclass
 class Node_Struct:
-    node_ID : Node_ID
+    node_ID : Node_ID_Struct
     data: dict
-    relations: List['Relation_Struct']
+    relation_claims: List['Relation_Claim_Struct']
     #nodeLib.structure2.relation_struct.Relation_Struct
 
 @dataclass
 class Relation_Struct:
-    from_node : Node_Struct
+    relation_name : str
+
+directions_ = namedtuple(
+    'directions', ['to_to_from','from_to_to']
+    )
+
+@dataclass
+class Relation_Claim_Struct:
+    # from_node : Node_Struct
     to_node : Node_Struct
     # what is the first node to the second node
-    rel_from_to_to : str
-    rel_to_to_from : str
+    relation : Relation_Struct
+    rel_direction : str # [to_to_from,from_to_to] / [ttf,ftt]
