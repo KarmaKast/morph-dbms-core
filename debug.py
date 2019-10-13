@@ -16,6 +16,17 @@ from typing import List, Any
 
 import nodeLib
 
+class Debug_Tools:
+    DEBUG_GLOBAL = False
+    
+    @staticmethod
+    def debug_msg(msg, local_debug=0):
+        if DEBUG_GLOBAL or local_debug:
+            print(msg)
+    @classmethod
+    def set_debug_global(cls, bool_):
+        cls.DEBUG_GLOBAL = True
+
 class Debug_Node:
     @staticmethod
     def describe(node_ : nodeLib.structure.node_structs.Node_Struct, mode:str = None):
