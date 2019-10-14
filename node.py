@@ -14,9 +14,8 @@
 
 from typing import List, Any
 
-#from .structure import node_structs
-#from nodeLib.structure import node_structs
-import nodeLib
+#import nodeLib
+from . import structure
 
     
 class Node_Manager:
@@ -34,13 +33,13 @@ class Node_Manager:
         #    data = {},
         #    relation_claims = []
         #)
-        node_ID : nodeLib.structure.node_structs.Node_ID_Struct
+        node_ID : structure.node_structs.Node_ID_Struct
         if {"node_ID"}.issubset(kwargs.keys()):
-            node_ID = nodeLib.structure.node_structs.Node_ID_Struct(
+            node_ID = structure.node_structs.Node_ID_Struct(
                 ID = kwargs['node_ID']['ID'],
                 node_name = kwargs['node_ID']['node_name']
                 )
-        node_ = nodeLib.structure.node_structs.Node_Struct(
+        node_ = structure.node_structs.Node_Struct(
             node_ID = node_ID,
             data = kwargs["data"] if ("data") in kwargs.keys() else {},
             relation_claims = []
@@ -51,16 +50,16 @@ class Node_Manager:
     def claim_relations(from_node, to_nodes:list, rel_from_to_to = None, rel_to_to_from = None):
         def add_relation(from_node, to_node , rel_from_to_to = None, rel_to_to_from = None):
             if rel_from_to_to != None:
-                relation = nodeLib.structure.node_structs.Relation_Claim_Struct(
+                relation = structure.node_structs.Relation_Claim_Struct(
                     to_node = to_node,
-                    relation = nodeLib.structure.node_structs.Relation_Struct(relation_name = rel_from_to_to),
+                    relation = structure.node_structs.Relation_Struct(relation_name = rel_from_to_to),
                     rel_direction = 'from_to_to'
                 )
                 from_node.relation_claims.append(relation)
             if rel_to_to_from != None:
-                relation = nodeLib.structure.node_structs.Relation_Claim_Struct(
+                relation = structure.node_structs.Relation_Claim_Struct(
                     to_node = to_node,
-                    relation = nodeLib.structure.node_structs.Relation_Struct(relation_name = rel_to_to_from),
+                    relation = structure.node_structs.Relation_Struct(relation_name = rel_to_to_from),
                     rel_direction = 'to_to_from'
                 )
                 from_node.relation_claims.append(relation)
@@ -87,7 +86,7 @@ class Node_Manager:
                 rel_to_to_from
         """
         assert 'node_ID' in kwargs.keys()
-        new_node_ : nodeLib.structure.node_structs.Node_Struct
+        new_node_ : structure.node_structs.Node_Struct
         if 'data' in kwargs.keys():
             new_node_ = Node_Manager.create_node(node_ID = kwargs["node_ID"], data = kwargs['data'])
         else:
@@ -110,14 +109,14 @@ class Node_Manager:
     
     @staticmethod
     def get_rel_node(node_, location: List[int]):
-            node_ : nodeLib.structure.node_structs.Node_Struct = node_.relation_claims[location[0]].to_node
+            node_ : structure.node_structs.Node_Struct = node_.relation_claims[location[0]].to_node
             for i in location[1:]:
                 node_ = node_.relation_claims[i].to_node
             return node_
     
     @staticmethod
     def get_rel_nodes(node_, locations: List[List[int]]):
-        nodes_ : List[deLib.structure.node_structs.Node_Struct] = []
+        nodes_ : List[structure.node_structs.Node_Struct] = []
         for location in locations:
             nodes_.append(Node_Manager.get_rel_node(node_, location))
         
