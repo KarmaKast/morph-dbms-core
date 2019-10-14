@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Any, Union
+from typing import List, Set, Any, Union
 from dataclasses import dataclass
 from collections import namedtuple
 
@@ -26,7 +26,6 @@ class Node_Struct:
     node_ID : Node_ID_Struct
     data: dict
     relation_claims: List['Relation_Claim_Struct']
-    #nodeLib.structure2.relation_struct.Relation_Struct
 
 @dataclass
 class Relation_Struct:
@@ -43,3 +42,7 @@ class Relation_Claim_Struct:
     # what is the first node to the second node
     relation : Relation_Struct
     rel_direction : str # [to_to_from,from_to_to] / [ttf,ftt]
+
+@dataclass
+class NodePack_Struct:
+    pack : Set[Node_Struct]
