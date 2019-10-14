@@ -19,8 +19,6 @@ from . import structure
 
     
 class Node_Manager:
-    def __init__(self, **kwargs):
-        pass
         
     @staticmethod
     def create_node(**kwargs):
