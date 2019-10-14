@@ -14,7 +14,8 @@
 
 from typing import List, Any
 
-import nodeLib
+#import nodeLib
+from . import structure
 
 class Debug_Tools:
     DEBUG_GLOBAL = False
@@ -29,7 +30,7 @@ class Debug_Tools:
 
 class Debug_Node:
     @staticmethod
-    def describe(node_ : nodeLib.structure.node_structs.Node_Struct, mode:str = None):
+    def describe(node_ : structure.node_structs.Node_Struct, mode:str = None):
         # describe self.node_data
         print()
         if mode == 'compact':
