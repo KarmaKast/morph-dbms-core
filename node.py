@@ -66,10 +66,14 @@ class Node_Manager:
            
     @staticmethod
     def accept_relations(node_, from_nodes):
+        """ 
+        if from_nodes has relation claims towards node_ , create counter claims
+        
+        """
         for from_node in from_nodes:
             for relation in from_node.relation_claims:
                 if relation.to_node == node_:
-                    Node_Manager.claim_relations(from_node = node_, to_nodes = [relation.from_node], rel_from_to_to=relation.rel_to_to_from, rel_to_to_from = relation.rel_from_to_to)
+                    Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_from_to_to=relation.rel_to_to_from, rel_to_to_from = relation.rel_from_to_to)
                     #print("DEBUG", relation)
                     
     @staticmethod
@@ -136,7 +140,7 @@ class Node_Manager:
                 print('to_node : ',  relation_claim.to_node.node_ID)
                 print(relation_claim.rel_direction, ' = ', relation_claim.relation.relation_name)
         else:
-            print(node_.node_ID)
+            print("FROM ", node_.node_ID)
             print("---- DATA ----")
             for relation_claim in node_.data.items():
                 print(relation_claim[0], " : ", relation_claim[1])
