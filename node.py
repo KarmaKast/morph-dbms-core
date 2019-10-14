@@ -17,7 +17,7 @@ from typing import List, Any
 #import nodeLib
 from . import structure
 
-    
+
 class Node_Manager:
         
     @staticmethod
@@ -119,4 +119,39 @@ class Node_Manager:
             nodes_.append(Node_Manager.get_rel_node(node_, location))
         
         return nodes_
- 
+    
+    @staticmethod
+    def describe(node_ : structure.node_structs.Node_Struct, mode:str = None):
+        # describe self.node_data
+        print()
+        print("-----------------------------------------------------------")
+        if mode == 'compact':
+            print("FROM ", node_.node_ID)
+            print("---- DATA ----")
+            print(node_.data)
+            print("---- RELATIONS ----")
+            for count,relation_claim in enumerate(node_.relation_claims):
+                print("\n-- relation ",count," :")
+                #print('from_node : ', _.from_node.node_ID)
+                print('to_node : ',  relation_claim.to_node.node_ID)
+                print(relation_claim.rel_direction, ' = ', relation_claim.relation.relation_name)
+        else:
+            print(node_.node_ID)
+            print("---- DATA ----")
+            for relation_claim in node_.data.items():
+                print(relation_claim[0], " : ", relation_claim[1])
+            print("---- RELATIONS ----")
+            for count,relation_claim in enumerate(node_.relation_claims):
+                print("\n-- relation ",count," :")
+                print('from_node')
+                print( node_.node_ID)
+                print('to_node')
+                print( relation_claim.to_node.node_ID)
+                print('relation_name = ', relation_claim.relation.relation_name, '\nrel_direction = ', relation_claim.rel_direction)
+
+class Node_Pack:
+    @staticmethod
+    def describe(nodePack_ : structure.node_structs.NodePack_Struct, mode:str = None):
+        
+        pass
+
