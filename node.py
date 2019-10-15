@@ -154,15 +154,31 @@ class Node_Manager:
             print("---- RELATIONS ----")
             for count,relation_claim in enumerate(node_.relation_claims):
                 print("\n-- relation ",count," :")
-                print('from_node')
-                print( node_.node_ID)
                 print('to_node')
                 print( relation_claim.to_node.node_ID)
                 print('relation_name = ', relation_claim.relation.relation_name, '\nrel_direction = ', relation_claim.rel_direction)
 
 class Node_Pack:
     @staticmethod
-    def describe(nodePack_ : structure.node_structs.NodePack_Struct, mode:str = None):
+    def create_pack(seed_node: structure.node_structs.Node_Struct):
+        debug.Debug_Tools.debug_msg('Nodepack create_pack started')
+        nodePack_ = structure.node_structs.NodePack_Struct(
+            pack = list()
+        )
+        nodePack_.pack.append(seed_node)
+        def add_relations(node_: structure.node_structs.Node_Struct):
+            for relation in node_.relation_claims:
+                if relation.to_node not in nodePack_.pack:
+                    nodePack_.pack.append(relation.to_node)
+                    add_relations(relation.to_node)
+        add_relations(seed_node)
+        debug.Debug_Tools.debug_msg('Nodepack create_pack ended')
+        return nodePack_
         
-        pass
+    @staticmethod
+    def describe(nodePack_ : structure.node_structs.NodePack_Struct, mode:str = None):
+        debug.Debug_Tools.debug_msg('Nodepack describe started')
+        for node_ in nodePack_.pack:
+            Node_Manager.describe(node_, mode)
+        debug.Debug_Tools.debug_msg('Nodepack describe ended')
 
