@@ -16,7 +16,7 @@ from typing import List, Any
 
 #import nodeLib
 from . import structure
-
+from . import debug
 
 class Node_Manager:
         
@@ -65,12 +65,23 @@ class Node_Manager:
             add_relation(from_node, to_node_, rel_from_to_to, rel_to_to_from)
            
     @staticmethod
-    def accept_relations(node_, from_nodes):
+    def accept_relations(node_:structure.node_structs.Node_Struct, from_nodes:List[structure.node_structs.Node_Struct]):
+        """ 
+        if from_nodes has relation claims towards node_ , create counter claims
+        
+        """
+        debug.Debug_Tools.debug_msg('Node accept_relations started')
         for from_node in from_nodes:
+            Node_Manager.describe(from_node, 'compact')
             for relation in from_node.relation_claims:
                 if relation.to_node == node_:
-                    Node_Manager.claim_relations(from_node = node_, to_nodes = [relation.from_node], rel_from_to_to=relation.rel_to_to_from, rel_to_to_from = relation.rel_from_to_to)
+                    if relation.rel_direction == 'to_to_from':
+                        Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_from_to_to=relation.relation.relation_name)
+                    elif relation.rel_direction == 'from_to_to':
+                        Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_to_to_from = relation.relation.relation_name)
+                    #Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_from_to_to=relation.rel_to_to_from, rel_to_to_from = relation.rel_from_to_to)
                     #print("DEBUG", relation)
+        debug.Debug_Tools.debug_msg('Node accept_relations ended')
                     
     @staticmethod
     def create_related_node(**kwargs):
@@ -136,22 +147,38 @@ class Node_Manager:
                 print('to_node : ',  relation_claim.to_node.node_ID)
                 print(relation_claim.rel_direction, ' = ', relation_claim.relation.relation_name)
         else:
-            print(node_.node_ID)
+            print("FROM ", node_.node_ID)
             print("---- DATA ----")
             for relation_claim in node_.data.items():
                 print(relation_claim[0], " : ", relation_claim[1])
             print("---- RELATIONS ----")
             for count,relation_claim in enumerate(node_.relation_claims):
                 print("\n-- relation ",count," :")
-                print('from_node')
-                print( node_.node_ID)
                 print('to_node')
                 print( relation_claim.to_node.node_ID)
                 print('relation_name = ', relation_claim.relation.relation_name, '\nrel_direction = ', relation_claim.rel_direction)
 
 class Node_Pack:
     @staticmethod
-    def describe(nodePack_ : structure.node_structs.NodePack_Struct, mode:str = None):
+    def create_pack(seed_node: structure.node_structs.Node_Struct):
+        debug.Debug_Tools.debug_msg('Nodepack create_pack started')
+        nodePack_ = structure.node_structs.NodePack_Struct(
+            pack = list()
+        )
+        nodePack_.pack.append(seed_node)
+        def add_relations(node_: structure.node_structs.Node_Struct):
+            for relation in node_.relation_claims:
+                if relation.to_node not in nodePack_.pack:
+                    nodePack_.pack.append(relation.to_node)
+                    add_relations(relation.to_node)
+        add_relations(seed_node)
+        debug.Debug_Tools.debug_msg('Nodepack create_pack ended')
+        return nodePack_
         
-        pass
+    @staticmethod
+    def describe(nodePack_ : structure.node_structs.NodePack_Struct, mode:str = None):
+        debug.Debug_Tools.debug_msg('Nodepack describe started')
+        for node_ in nodePack_.pack:
+            Node_Manager.describe(node_, mode)
+        debug.Debug_Tools.debug_msg('Nodepack describe ended')
 

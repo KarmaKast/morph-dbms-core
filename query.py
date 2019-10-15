@@ -16,19 +16,3 @@ from typing import List, Any
 
 #import nodeLib
 
-class NodePack:
-    @staticmethod
-    def pack(node_, include_self=True, **kwargs):
-        """
-        Given a Node return a packet containing all the nodes related to it and itself.
-        """
-        packet = []
-        if include_self:
-            packet.append(node_)
-            
-        for relation_ in node_.relations_ftt:
-            if relation_.rel_to_to_from == kwargs['relation_type']:
-                packet.append(relation_.to_node)
-        
-        #return packet
-        return packet

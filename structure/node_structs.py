@@ -45,4 +45,4 @@ class Relation_Claim_Struct:
 
 @dataclass
 class NodePack_Struct:
-    pack : Set[Node_Struct]
+    pack : List[Node_Struct]
