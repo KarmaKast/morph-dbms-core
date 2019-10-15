@@ -16,7 +16,7 @@ from typing import List, Any
 
 #import nodeLib
 from . import structure
-
+from . import debug
 
 class Node_Manager:
         
@@ -65,16 +65,23 @@ class Node_Manager:
             add_relation(from_node, to_node_, rel_from_to_to, rel_to_to_from)
            
     @staticmethod
-    def accept_relations(node_, from_nodes):
+    def accept_relations(node_:structure.node_structs.Node_Struct, from_nodes:List[structure.node_structs.Node_Struct]):
         """ 
         if from_nodes has relation claims towards node_ , create counter claims
         
         """
+        debug.Debug_Tools.debug_msg('Node accept_relations started')
         for from_node in from_nodes:
+            Node_Manager.describe(from_node, 'compact')
             for relation in from_node.relation_claims:
                 if relation.to_node == node_:
-                    Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_from_to_to=relation.rel_to_to_from, rel_to_to_from = relation.rel_from_to_to)
+                    if relation.rel_direction == 'to_to_from':
+                        Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_from_to_to=relation.relation.relation_name)
+                    elif relation.rel_direction == 'from_to_to':
+                        Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_to_to_from = relation.relation.relation_name)
+                    #Node_Manager.claim_relations(from_node = node_, to_nodes = [from_node], rel_from_to_to=relation.rel_to_to_from, rel_to_to_from = relation.rel_from_to_to)
                     #print("DEBUG", relation)
+        debug.Debug_Tools.debug_msg('Node accept_relations ended')
                     
     @staticmethod
     def create_related_node(**kwargs):
