@@ -72,7 +72,6 @@ class Node_Manager:
         """
         debug.Debug_Tools.debug_msg('Node accept_relations started')
         for from_node in from_nodes:
-            Node_Manager.describe(from_node, 'compact')
             for relation in from_node.relation_claims:
                 if relation.to_node == node_:
                     if relation.rel_direction == 'to_to_from':
@@ -132,31 +131,38 @@ class Node_Manager:
         return nodes_
     
     @staticmethod
-    def describe(node_ : structure.node_structs.Node_Struct, mode:str = None):
+    def describe(node_ : structure.node_structs.Node_Struct, mode:str = None, describer_ = print, describer_args: list = None):
         # describe self.node_data
-        print()
-        print("-----------------------------------------------------------")
+        def describer(msg=''):
+            if describer_args == None:
+                describer_(msg)
+            else:
+                describer_(msg, *describer_args)
+            # TODO support **kwargs also
+            
+        describer()
+        describer("-----------------------------------------------------------")
         if mode == 'compact':
-            print("FROM ", node_.node_ID)
-            print("---- DATA ----")
-            print(node_.data)
-            print("---- RELATIONS ----")
+            describer("FROM : {}".format(node_.node_ID))
+            describer("---- DATA ----")
+            describer(node_.data)
+            describer("---- RELATIONS ----")
             for count,relation_claim in enumerate(node_.relation_claims):
-                print("\n-- relation ",count," :")
+                describer("\n-- relation {} :".format(count))
                 #print('from_node : ', _.from_node.node_ID)
-                print('to_node : ',  relation_claim.to_node.node_ID)
-                print(relation_claim.rel_direction, ' = ', relation_claim.relation.relation_name)
+                describer('to_node : {}'.format(relation_claim.to_node.node_ID))
+                describer('{} = {}'.format(relation_claim.rel_direction, relation_claim.relation.relation_name))
         else:
-            print("FROM ", node_.node_ID)
-            print("---- DATA ----")
+            describer("FROM : {}".format(node_.node_ID))
+            describer("---- DATA ----")
             for relation_claim in node_.data.items():
-                print(relation_claim[0], " : ", relation_claim[1])
-            print("---- RELATIONS ----")
+                describer("{} : {}".format(relation_claim[0],relation_claim[1]))
+            describer("---- RELATIONS ----")
             for count,relation_claim in enumerate(node_.relation_claims):
-                print("\n-- relation ",count," :")
-                print('to_node')
-                print( relation_claim.to_node.node_ID)
-                print('relation_name = ', relation_claim.relation.relation_name, '\nrel_direction = ', relation_claim.rel_direction)
+                describer("\n-- relation {} :".format(count))
+                describer('to_node')
+                describer( relation_claim.to_node.node_ID)
+                describer('relation_name = {}\nrel_direction = {}'.format(relation_claim.relation.relation_name, relation_claim.rel_direction))
 
 class Node_Pack:
     @staticmethod
