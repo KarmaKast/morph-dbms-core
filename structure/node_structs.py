@@ -21,7 +21,7 @@ class Node_ID_Struct:
     ID : str
     node_name : str
     
-@dataclass
+@dataclass(repr=False)
 class Node_Struct:
     node_ID : Node_ID_Struct
     data: dict
