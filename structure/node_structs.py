@@ -39,7 +39,8 @@ class Node_Struct:
         if not hasattr(self, '_hash'):
             #"""
             hasher = hashlib.md5()
-            hasher.update(str(self.__repr__()).split(sep=' ')[-1][:-1].encode())
+            #hasher.update(str(self.__repr__()).split(sep=' ')[-1][:-1].encode())
+            hasher.update(str(id(self)).split(sep=' ')[-1][:-1].encode())
             hash_ = hasher.hexdigest()
             hash_ = int(hash_, base=16)
             #"""
@@ -47,6 +48,11 @@ class Node_Struct:
             self._hash = hash_ 
         
         return self._hash
+    
+    def __repr__(self):
+        #return super().__repr__()
+        rep = '{} | hash: {}'.format(self.node_ID, self._hash)
+        return rep
 
 @dataclass
 class Relation_Struct:
