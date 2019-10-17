@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Set, Any, Union
+import hashlib
+from typing import List, Set, Dict, Union
 from dataclasses import dataclass
 from collections import namedtuple
 
 @dataclass
 class Node_ID_Struct:
-    ID : str
+    ID : Union[int,str]
     node_name : str
     
 @dataclass(repr=False)
@@ -26,6 +27,26 @@ class Node_Struct:
     node_ID : Node_ID_Struct
     data: dict
     relation_claims: List['Relation_Claim_Struct']
+    
+    def __hash__(self):
+        """
+        this hash is created using the memory location of this object.
+        It is unique among all the nodes currently loaded into the memory
+        Returns:
+            [type] -- [description]
+        """
+        #return super().__hash__()
+        if not hasattr(self, '_hash'):
+            #"""
+            hasher = hashlib.md5()
+            hasher.update(str(self.__repr__()).split(sep=' ')[-1][:-1].encode())
+            hash_ = hasher.hexdigest()
+            hash_ = int(hash_, base=16)
+            #"""
+            #hash_ = int(str(self.__repr__()).split(sep=' ')[-1][:-2], base=16)
+            self._hash = hash_ 
+        
+        return self._hash
 
 @dataclass
 class Relation_Struct:
@@ -45,4 +66,4 @@ class Relation_Claim_Struct:
 
 @dataclass
 class NodePack_Struct:
-    pack : List[Node_Struct]
+    pack : Set[Node_Struct]
