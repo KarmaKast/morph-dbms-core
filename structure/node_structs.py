@@ -12,28 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Set, Any, Union
+import hashlib
+from typing import List, Set, Dict, Union
 from dataclasses import dataclass
 from collections import namedtuple
 
+#dict({'custom':Union[int,str], 'auto':str})
 @dataclass
 class Node_ID_Struct:
-    ID : str
+    ID : Union[int,str]
     node_name : str
     
-@dataclass
+@dataclass(repr=False)
 class Node_Struct:
     node_ID : Node_ID_Struct
     data: dict
-    relation_claims: List['Relation_Claim_Struct']
+    relation_claims: Set['Relation_Claim_Struct']
+    
+    def __hash__(self):
+        """
+        this hash is created using the memory location of this object.
+        It is unique among all the nodes currently loaded into the memory
+        Returns:
+            [type] -- [description]
+        """
+        #return super().__hash__()
+        if not hasattr(self, '_hash'):
+            #"""
+            hasher = hashlib.md5()
+            hasher.update(str(id(self)).split(sep=' ')[-1][:-1].encode())
+            hash_ = hasher.hexdigest()
+            hash_ = int(hash_, base=16)
+            self._hash = hash_ 
+        return self._hash
+    
+    def __repr__(self):
+        #return super().__repr__()
+        rep = '{} with hash: {}'.format(self.node_ID, self._hash)
+        return rep
 
 @dataclass
 class Relation_Struct:
     relation_name : str
 
-directions_ = namedtuple(
-    'directions', ['to_to_from','from_to_to']
-    )
+#directions_ = namedtuple('directions', ['to_to_from','from_to_to'])
+#directions_ = directions_('to_to_from','from_to_to')
 
 @dataclass
 class Relation_Claim_Struct:
@@ -42,7 +65,25 @@ class Relation_Claim_Struct:
     # what is the first node to the second node
     relation : Relation_Struct
     rel_direction : str # [to_to_from,from_to_to] / [ttf,ftt]
+    
+    def __hash__(self):
+        """
+        this hash is created using the memory location of this object.
+        It is unique among all the nodes currently loaded into the memory
+        Returns:
+            [type] -- [description]
+        """
+        #return super().__hash__()
+        if not hasattr(self, '_hash'):
+            #"""
+            hasher = hashlib.md5()
+            hasher.update(str(id(self)).split(sep=' ')[-1][:-1].encode())
+            hash_ = hasher.hexdigest()
+            hash_ = int(hash_, base=16)
+            self._hash = hash_ 
+        
+        return self._hash
 
 @dataclass
 class NodePack_Struct:
-    pack : List[Node_Struct]
+    pack : Set[Node_Struct]
