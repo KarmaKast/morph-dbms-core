@@ -54,6 +54,25 @@ class Node_Struct:
 @dataclass
 class Relation_Struct:
     relation_name : str
+    #rel_direction : str
+    
+    def __hash__(self):
+        """
+        this hash is created using the memory location of this object.
+        It is unique among all the nodes currently loaded into the memory
+        Returns:
+            [type] -- [description]
+        """
+        #return super().__hash__()
+        if not hasattr(self, '_hash'):
+            #"""
+            hasher = hashlib.md5()
+            hasher.update(str(id(self)).split(sep=' ')[-1][:-1].encode())
+            hash_ = hasher.hexdigest()
+            hash_ = int(hash_, base=16)
+            self._hash = hash_ 
+        
+        return self._hash
 
 #directions_ = namedtuple('directions', ['to_to_from','from_to_to'])
 #directions_ = directions_('to_to_from','from_to_to')
