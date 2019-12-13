@@ -48,12 +48,40 @@ class Node_Struct:
     
     def __repr__(self):
         #return super().__repr__()
-        rep = '{} with hash: {}'.format(self.node_ID, self._hash)
-        return rep
+        repr_ = 'node ({}) with hash {}'.format(self.node_ID, self._hash)
+        return repr_
+    
 
 @dataclass
 class Relation_Struct:
     relation_name : str
+    #rel_direction : str
+    
+    def __hash__(self):
+        """
+        this hash is created using the memory location of this object.
+        It is unique among all the nodes currently loaded into the memory
+        Returns:
+            [type] -- [description]
+        """
+        #return super().__hash__()
+        if not hasattr(self, '_hash'):
+            #"""
+            hasher = hashlib.md5()
+            hasher.update(str(id(self)).split(sep=' ')[-1][:-1].encode())
+            hash_ = hasher.hexdigest()
+            hash_ = int(hash_, base=16)
+            self._hash = hash_ 
+        
+        return self._hash
+    
+    def __repr__(self):
+        repr_ = 'relation(name={}) with hash {}'.format(
+            self.relation_name,
+            self._hash,
+        )
+        return repr_
+    
 
 #directions_ = namedtuple('directions', ['to_to_from','from_to_to'])
 #directions_ = directions_('to_to_from','from_to_to')
@@ -83,6 +111,15 @@ class Relation_Claim_Struct:
             self._hash = hash_ 
         
         return self._hash
+    
+    def __repr__(self):
+        repr_ = 'relation claim(to_node={}, relation={}, rel_direction={}) with hash{}'.format(
+            self.to_node,
+            self.relation,
+            'ftt' if self.rel_direction=='from_to_to' else ('ttf' if self.rel_direction=='to_to_from' else 'INVALID'),
+            self._hash
+        )
+        return repr_
 
 @dataclass
 class NodePack_Struct:
