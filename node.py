@@ -178,7 +178,11 @@ class Node_Manager:
         Debug_Tools.debug_msg('Node accept_relations ended')
                     
     @staticmethod
-    def create_related_node(**kwargs):
+    def create_related_node(from_node:structure.node_structs.Node_Struct, 
+                            node_ID:structure.node_structs.Node_ID_Struct = None, 
+                            data:dict = None, 
+                            rel_from_to_to:str = None, 
+                            rel_to_to_from:str = None):
         """
             use create_node() and then add relation_claims btw them
             [kwargs]
@@ -188,26 +192,21 @@ class Node_Manager:
                 rel_from_to_to
                 rel_to_to_from
         """
-        assert 'node_ID' in kwargs.keys()
-        new_node_ : structure.node_structs.Node_Struct
-        if 'data' in kwargs.keys():
-            new_node_ = Node_Manager.create_node(node_ID = kwargs["node_ID"], data = kwargs['data'])
-        else:
-            new_node_ = Node_Manager.create_node(node_ID = kwargs["node_ID"])
+        new_node_ = Node_Manager.create_node(node_ID = node_ID, data = data)
             
-        if {'from_node','rel_to_to_from','rel_from_to_to'}.issubset(set(kwargs.keys())):
-            Node_Manager.claim_relations(
-                from_node = kwargs['from_node'],
-                to_nodes = [new_node_],
-                rel_from_to_to = kwargs['rel_from_to_to'],
-                rel_to_to_from = kwargs['rel_to_to_from']
-                )
-            Node_Manager.claim_relations(
-                from_node = new_node_,
-                to_nodes = [kwargs['from_node']],
-                rel_from_to_to = kwargs['rel_to_to_from'],
-                rel_to_to_from = kwargs['rel_from_to_to']
+        
+        Node_Manager.claim_relations(
+            from_node = from_node,
+            to_nodes = [new_node_],
+            rel_from_to_to = rel_from_to_to,
+            rel_to_to_from = rel_to_to_from
             )
+        Node_Manager.claim_relations(
+            from_node = new_node_,
+            to_nodes = [from_node],
+            rel_from_to_to = rel_to_to_from,
+            rel_to_to_from = rel_from_to_to
+        )
             
         return new_node_
     
@@ -411,3 +410,7 @@ class Node_Pack:
                 describer_args = describer_args)
         Debug_Tools.debug_msg('Nodepack describe ended',True)
 
+class Model:
+    
+    #@staticmethod
+    pass
