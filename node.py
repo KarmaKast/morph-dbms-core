@@ -358,7 +358,7 @@ class Node_Manager:
 
 class Node_Pack:
     @staticmethod
-    def create_pack(seed_node: structure.node_structs.Node_Struct):
+    def create_pack(seed_node: structure.node_structs.Node_Struct = None):
         """
         creates a list of nodes from a related collected of nodes using a seed_node
 
@@ -373,13 +373,14 @@ class Node_Pack:
         nodePack_ = structure.node_structs.NodePack_Struct(
             pack = set()
         )
-        nodePack_.pack.add(seed_node)
-        def add_relations(node_: structure.node_structs.Node_Struct):
-            for relation in node_.relation_claims:
-                if relation.to_node not in nodePack_.pack:
-                    nodePack_.pack.add(relation.to_node)
-                    add_relations(relation.to_node)
-        add_relations(seed_node)
+        if seed_node != None:
+            nodePack_.pack.add(seed_node)
+            def add_relations(node_: structure.node_structs.Node_Struct):
+                for relation in node_.relation_claims:
+                    if relation.to_node not in nodePack_.pack:
+                        nodePack_.pack.add(relation.to_node)
+                        add_relations(relation.to_node)
+            add_relations(seed_node)
         
         Debug_Tools.debug_msg('Nodepack create_pack ended')
         return nodePack_
