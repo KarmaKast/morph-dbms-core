@@ -18,9 +18,9 @@ from . import structure
 from .debug import Debug_Tools
 
 
-def write(node_: structure.node_structs.Node_Struct,path):
-    
-    with open(path,'w') as file:
+def write(node_: structure.node_structs.Node_Struct, path):
+
+    with open(path, 'w') as file:
         # TODO write a set of relations
         relations = set()
         relations_ = set()
@@ -34,5 +34,5 @@ def write(node_: structure.node_structs.Node_Struct,path):
                     if relation.relation_name == relation_.relation_name:
                         relations.remove(relation_)
         print(relations)
-        #file.write(yaml.dump(relations))
+        # file.write(yaml.dump(relations))
         file.write(yaml.dump(node_))
