@@ -358,7 +358,7 @@ class Node_Manager:
 
 class Node_Pack:
     @staticmethod
-    def create_pack(seed_node: structure.node_structs.Node_Struct = None):
+    def create_pack(seed_node: structure.node_structs.Node_Struct = None, packName = None):
         """
         creates a list of nodes from a related collected of nodes using a seed_node
 
@@ -371,6 +371,7 @@ class Node_Pack:
         Debug_Tools.debug_msg('Nodepack create_pack started')
         
         nodePack_ = structure.node_structs.NodePack_Struct(
+            packName = packName,
             pack = set()
         )
         if seed_node != None:
@@ -402,6 +403,7 @@ class Node_Pack:
     @staticmethod
     def describe(nodePack_ : structure.node_structs.NodePack_Struct, to_node_data_keys:list = None, mode:str = None, describer_ = print, describer_args: list = None):
         Debug_Tools.debug_msg('Nodepack describe started',True)
+        print('Pack name: {}'.format(nodePack_.packName))
         for node_ in nodePack_.pack:
             Node_Manager.describe(
                 node_= node_, 

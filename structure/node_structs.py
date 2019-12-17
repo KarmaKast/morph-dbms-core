@@ -123,4 +123,5 @@ class Relation_Claim_Struct:
 
 @dataclass
 class NodePack_Struct:
+    packName: str
     pack : Set[Node_Struct]
