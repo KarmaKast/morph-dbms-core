@@ -125,6 +125,6 @@ class Relation_Claim_Struct:
 
 
 @dataclass
-class NodePack_Struct:
-    packName: str
-    pack: Set[Node_Struct]
+class NodeCluster_Struct:
+    clusterName: str
+    cluster: Set[Node_Struct]
