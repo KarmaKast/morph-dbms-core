@@ -22,36 +22,16 @@ from .debug import Debug_Tools
 class Node_Manager:
 
     @staticmethod
-    def create_node(node_ID: structure.node_structs.Node_ID_Struct, data={}, relation_claims=set()):
+    def create_node(node_ID: structure.node_structs.NodeIdStruct, data={}, relation_claims=set()):
         """[kwargs]
         node_ID
         data
         relation_claims
         """
-
-        """
-        if {"node_ID"}.issubset(kwargs.keys()):
-            node_ID = structure.node_structs.Node_ID_Struct(
-                ID=kwargs['node_ID']['ID'] if 'ID' in kwargs['node_ID'].keys(
-                ) else None,
-                node_name=kwargs['node_ID']['node_name'] if 'node_name' in kwargs['node_ID'].keys(
-                ) else None
-            )
-        else:
-            node_ID = structure.node_structs.Node_ID_Struct(
-                ID=None,
-                node_name=None
-            )
-        node_ = structure.node_structs.Node_Struct(
-            node_ID=node_ID,
-            data=kwargs["data"] if ("data") in kwargs.keys() else {},
-            relation_claims=set()
-        )
-        """
-        node_ = structure.node_structs.Node_Struct(
-            node_ID=structure.node_structs.Node_ID_Struct(
+        node_ = structure.node_structs.NodeStruct(
+            node_ID=structure.node_structs.NodeIdStruct(
                 ID=node_ID['ID'] if 'ID' in node_ID.keys() else 0,
-                node_name=node_ID['node_name'] if 'node_name' in node_ID.keys() else None),
+                node_label=node_ID['node_name'] if 'node_name' in node_ID.keys() else None),
             data=data,
             relation_claims=relation_claims
         )
@@ -62,11 +42,11 @@ class Node_Manager:
         return node_
 
     @staticmethod
-    def add_relation(check_nodes: Set[structure.node_structs.Node_Struct],
+    def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
                      rel_from_to_self: str = None,
                      rel_self_to_from: str = None):
 
-        relations:  Dict[structure.node_structs.Relation_Struct] = dict()
+        relations:  Dict[structure.node_structs.RelationStruct] = dict()
 
         if rel_from_to_self != None:
             exists = False
@@ -78,7 +58,7 @@ class Node_Manager:
                         relations['from_to_self'] = relation_claim.relation
                         break
             if not exists:
-                relation = structure.node_structs.Relation_Struct(
+                relation = structure.node_structs.RelationStruct(
                     relation_name=rel_from_to_self)
                 relation.__hash__()
                 relations['from_to_self'] = relation
@@ -93,7 +73,7 @@ class Node_Manager:
                         relations['self_to_from'] = relation_claim.relation
                         break
             if not exists:
-                relation = structure.node_structs.Relation_Struct(
+                relation = structure.node_structs.RelationStruct(
                     relation_name=rel_self_to_from)
                 relation.__hash__()
                 relations['self_to_from'] = relation
@@ -101,8 +81,8 @@ class Node_Manager:
         return relations
 
     @staticmethod
-    def add_relation_claim(from_node: structure.node_structs.Node_Struct,
-                           to_node: structure.node_structs.Node_Struct,
+    def add_relation_claim(from_node: structure.node_structs.NodeStruct,
+                           to_node: structure.node_structs.NodeStruct,
                            rel_from_to_self: str = None,
                            rel_self_to_from: str = None):
 
@@ -110,7 +90,7 @@ class Node_Manager:
             [from_node, to_node], rel_from_to_self, rel_self_to_from)
         Debug_Tools.debug_msg(relations)
 
-        relation_claims: Set[structure.node_structs.Relation_Struct] = set()
+        relation_claims: Set[structure.node_structs.RelationStruct] = set()
         if rel_from_to_self != None:
             exists = False  # TODO check if relation claim already exists in from_node
             for relation_claim in from_node.relation_claims:
@@ -129,8 +109,8 @@ class Node_Manager:
                     break
 
             if not exists:
-                relation:  structure.node_structs.Relation_Struct = relations['from_to_self']
-                relation_claim = structure.node_structs.Relation_Claim_Struct(
+                relation:  structure.node_structs.RelationStruct = relations['from_to_self']
+                relation_claim = structure.node_structs.RelationClaimStruct(
                     to_node=to_node,
                     relation=relation,
                     rel_direction='from_to_self'
@@ -156,8 +136,8 @@ class Node_Manager:
                     break
 
             if not exists:
-                relation:  structure.node_structs.Relation_Struct = relations['self_to_from']
-                relation_claim = structure.node_structs.Relation_Claim_Struct(
+                relation:  structure.node_structs.RelationStruct = relations['self_to_from']
+                relation_claim = structure.node_structs.RelationClaimStruct(
                     to_node=to_node,
                     relation=relation,
                     rel_direction='self_to_from'
@@ -168,8 +148,8 @@ class Node_Manager:
         return relation_claims
 
     @staticmethod
-    def claim_relations(from_node: structure.node_structs.Node_Struct,
-                        to_nodes: Set[structure.node_structs.Node_Struct],
+    def claim_relations(from_node: structure.node_structs.NodeStruct,
+                        to_nodes: Set[structure.node_structs.NodeStruct],
                         rel_from_to_self: str = None,
                         rel_self_to_from: str = None):
         for to_node_ in to_nodes:
@@ -178,28 +158,31 @@ class Node_Manager:
             from_node.relation_claims.update(relation_claims)
 
     @staticmethod
-    def accept_relations(to_node_: structure.node_structs.Node_Struct, from_nodes: Set[structure.node_structs.Node_Struct]):
-        """ if from_nodes has relation claims towards to_node_ , create counter claims in to_node_
+    def accept_relations(node_: structure.node_structs.NodeStruct, from_nodes: Set[structure.node_structs.NodeStruct]):
+        """ if nodes from from_nodes has relation claims towards node_ , create counter claims in to_node_
             Arguments:
-                to_node_ {structure.node_structs.Node_Struct} -- [description]
-                from_nodes {List[structure.node_structs.Node_Struct]} -- [description]
+                to_node_ {structure.node_structs.NodeStruct} -- [description]
+                from_nodes {List[structure.node_structs.NodeStruct]} -- [description]
         """
         Debug_Tools.debug_msg('Node accept_relations started')
         for from_node in from_nodes:
             for relation in from_node.relation_claims:
-                if relation.to_node == to_node_:
+                # check if from_node has a relation claim towards node_
+                """
+                if relation.to_node == node_:
                     # instead of changing with the set during iteration
                     if relation.rel_direction == 'self_to_from':
-                        Node_Manager.claim_relations(from_node=to_node_, to_nodes=[
+                        Node_Manager.claim_relations(from_node=node_, to_nodes=[
                                                      from_node], rel_from_to_self=relation.relation.relation_name)
                     elif relation.rel_direction == 'from_to_self':
-                        Node_Manager.claim_relations(from_node=to_node_, to_nodes=[
+                        Node_Manager.claim_relations(from_node=node_, to_nodes=[
                                                      from_node], rel_self_to_from=relation.relation.relation_name)
+                """
         Debug_Tools.debug_msg('Node accept_relations ended')
 
     @staticmethod
-    def create_related_node(from_node: structure.node_structs.Node_Struct,
-                            node_ID: structure.node_structs.Node_ID_Struct = None,
+    def create_related_node(from_node: structure.node_structs.NodeStruct,
+                            node_ID: structure.node_structs.NodeIdStruct = None,
                             data: dict = None,
                             rel_from_to_self: str = None,
                             rel_self_to_from: str = None):
@@ -231,18 +214,18 @@ class Node_Manager:
 
     @staticmethod
     def get_rel_node(
-            node_: structure.node_structs.Node_Struct,
+            node_: structure.node_structs.NodeStruct,
             hash_deep: List[int] = None,
-            nodeID_deep: List[structure.node_structs.Node_ID_Struct] = None,
+            nodeID_deep: List[structure.node_structs.NodeIdStruct] = None,
             data_deep: List[dict] = None):
         """[summary]
 
             Arguments:
-                node_ {structure.node_structs.Node_Struct} -- [description]
+                node_ {structure.node_structs.NodeStruct} -- [description]
 
             Keyword Arguments:
                 hash_deep {List[int]} -- [description] (default: {None})
-                nodeID_deep {List[structure.node_structs.Node_ID_Struct]} -- [description] (default: {None})
+                nodeID_deep {List[structure.node_structs.NodeIdStruct]} -- [description] (default: {None})
                 data_deep {List[dict]} -- [description] (default: {None})
 
             Returns:
@@ -250,18 +233,18 @@ class Node_Manager:
         """
         # TODO deal with wrong inputs
         def _get_rel_node(
-                node_: structure.node_structs.Node_Struct,
+                node_: structure.node_structs.NodeStruct,
                 hash_shallow: int = None,
-                nodeID_shallow: structure.node_structs.Node_ID_Struct = None,
+                nodeID_shallow: structure.node_structs.NodeIdStruct = None,
                 data_shallow: dict = None):
             """[summary]
 
                 Arguments:
-                    node_ {structure.node_structs.Node_Struct} -- [description]
+                    node_ {structure.node_structs.NodeStruct} -- [description]
 
                 Keyword Arguments:
                     hash_shallow {int} -- [description] (default: {None})
-                    nodeID_shallow {structure.node_structs.Node_ID_Struct} -- [description] (default: {None})
+                    nodeID_shallow {structure.node_structs.NodeIdStruct} -- [description] (default: {None})
                     data_shallow {dict} -- [description] (default: {None})
 
                 Returns:
@@ -312,10 +295,10 @@ class Node_Manager:
     def get_rel_nodes(
             node_,
             hash_deep_list: List[List[int]] = None,
-            nodeID_deep_list: List[List[structure.node_structs.Node_ID_Struct]] = None,
+            nodeID_deep_list: List[List[structure.node_structs.NodeIdStruct]] = None,
             data_deep_list: List[List[dict]] = None):
 
-        _nodes: List[structure.node_structs.Node_Struct] = []
+        _nodes: List[structure.node_structs.NodeStruct] = []
         if hash_deep_list != None:
             for hash_deep in hash_deep_list:
                 _nodes.append(Node_Manager.get_rel_node(
@@ -332,7 +315,7 @@ class Node_Manager:
         return _nodes
 
     @staticmethod
-    def describe(node_: structure.node_structs.Node_Struct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
+    def describe(node_: structure.node_structs.NodeStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
         # describe self.node_data
         def describer(msg=''):
             if describer_args == None:
@@ -380,33 +363,33 @@ class Node_Manager:
                     relation_claim.relation.relation_name, relation_claim.rel_direction))
 
     @staticmethod
-    def delete_node(node_: structure.node_structs.Node_Struct, mode=None):
+    def delete_node(node_: structure.node_structs.NodeStruct, mode=None):
         # objects cannot be directly deleted in python. If nothing is referencing the object its deleted
         return None
 
 
 class Node_Cluster:
     @staticmethod
-    def create_cluster(seed_node: structure.node_structs.Node_Struct = None, clusterName=None):
+    def create_cluster(seed_node: structure.node_structs.NodeStruct = None, cluster_name=None):
         """
         creates a list of nodes from a related collected of nodes using a seed_node
 
         Arguments:
-            seed_node {structure.node_structs.Node_Struct} -- any node that is related to the collection of related nodes
+            seed_node {structure.node_structs.NodeStruct} -- any node that is related to the collection of related nodes
 
         Returns:
             [type] -- [description]
         """
         Debug_Tools.debug_msg('NodeCluster create_cluster started')
 
-        nodeCluster_ = structure.node_structs.NodeCluster_Struct(
-            clusterName=clusterName,
+        nodeCluster_ = structure.node_structs.NodeClusterStruct(
+            cluster_name=cluster_name,
             cluster=set()
         )
         if seed_node != None:
             nodeCluster_.cluster.add(seed_node)
 
-            def add_relations(node_: structure.node_structs.Node_Struct):
+            def add_relations(node_: structure.node_structs.NodeStruct):
                 for relation in node_.relation_claims:
                     if relation.to_node not in nodeCluster_.cluster:
                         nodeCluster_.cluster.add(relation.to_node)
@@ -421,10 +404,10 @@ class Node_Cluster:
         pass
 
     @staticmethod
-    def generate_IDs(nodeCluster_: structure.node_structs.NodeCluster_Struct):
+    def generate_IDs(nodeCluster_: structure.node_structs.NodeClusterStruct):
         Debug_Tools.debug_msg('NodeCluster generate_IDs started', True)
 
-        def generate_relative(nodeCluster_: structure.node_structs.NodeCluster_Struct):
+        def generate_relative(nodeCluster_: structure.node_structs.NodeClusterStruct):
             """ NOTE all nodes in the loaded into the memory most likely already has relatively unique hashes.
             The point of this function is to not depend on that mechanism to guaranty relatively unique hashes.
             """
@@ -432,10 +415,10 @@ class Node_Cluster:
         Debug_Tools.debug_msg('NodeCluster generate_IDs ended', True)
 
     @staticmethod
-    def describe(nodeCluster_: structure.node_structs.NodeCluster_Struct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
+    def describe(node_cluster: structure.node_structs.NodeClusterStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
         Debug_Tools.debug_msg('NodeCluster describe started', True)
-        describer_('Cluster name: {}'.format(nodeCluster_.clusterName))
-        for node_ in nodeCluster_.cluster:
+        describer_('Cluster name: {}'.format(node_cluster.cluster_name))
+        for node_ in node_cluster.cluster:
             Node_Manager.describe(
                 node_=node_,
                 to_node_data_keys=to_node_data_keys,
