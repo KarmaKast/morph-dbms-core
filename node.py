@@ -86,6 +86,10 @@ class Node_Manager:
                            rel_self_to_to: str = None,
                            rel_to_to_self: str = None):
 
+        # check if node_ and to_node_ is same
+        if node_._hash == to_node._hash:
+            Debug_Tools.debug_msg('node and to_node same. How?')
+
         relations = Node_Manager.add_relation(
             [node_, to_node], rel_self_to_to, rel_to_to_self)
         Debug_Tools.debug_msg(relations)
@@ -384,15 +388,16 @@ class Node_Cluster:
 
         nodeCluster_ = structure.node_structs.NodeClusterStruct(
             cluster_name=cluster_name,
-            cluster=set()
+            nodes=set(),
+            relations=set()
         )
         if seed_node != None:
-            nodeCluster_.cluster.add(seed_node)
+            nodeCluster_.nodes.add(seed_node)
 
             def add_relations(node_: structure.node_structs.NodeStruct):
                 for relation in node_.relation_claims:
-                    if relation.to_node not in nodeCluster_.cluster:
-                        nodeCluster_.cluster.add(relation.to_node)
+                    if relation.to_node not in nodeCluster_.nodes:
+                        nodeCluster_.nodes.add(relation.to_node)
                         add_relations(relation.to_node)
             add_relations(seed_node)
 
@@ -418,7 +423,7 @@ class Node_Cluster:
     def describe(node_cluster: structure.node_structs.NodeClusterStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
         Debug_Tools.debug_msg('NodeCluster describe started', True)
         describer_('Cluster name: {}'.format(node_cluster.cluster_name))
-        for node_ in node_cluster.cluster:
+        for node_ in node_cluster.nodes:
             Node_Manager.describe(
                 node_=node_,
                 to_node_data_keys=to_node_data_keys,

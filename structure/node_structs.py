@@ -40,10 +40,12 @@ class NodeStruct:
         """
         # return super().__hash__()
         if not hasattr(self, '_hash'):
-            # """
+            #"""
             hasher = hashlib.md5()
             hasher.update(str(id(self)).split(sep=' ')[-1][:-1].encode())
             hash_ = hasher.hexdigest()
+            #"""
+            #hash_ = str(uuid.uuid1())
             hash_ = int(hash_, base=16)
             self._hash = hash_
         return self._hash
@@ -132,4 +134,5 @@ class RelationClaimStruct:
 @dataclass
 class NodeClusterStruct:
     cluster_name: str
-    cluster: Set[NodeStruct]
+    nodes: Set[NodeStruct]
+    relations: Set[RelationStruct]
