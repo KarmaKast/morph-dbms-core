@@ -22,7 +22,7 @@ from .debug import Debug_Tools
 class Node_Manager:
 
     @staticmethod
-    def create_node(node_ID: structure.node_structs.NodeIdStruct, data={}, relation_claims=set()):
+    def create_node(node_ID: dict, data={}, relation_claims=set()):
         """[kwargs]
         node_ID
         data
@@ -31,7 +31,7 @@ class Node_Manager:
         node_ = structure.node_structs.NodeStruct(
             node_ID=structure.node_structs.NodeIdStruct(
                 ID=node_ID['ID'] if 'ID' in node_ID.keys() else 0,
-                node_label=node_ID['node_name'] if 'node_name' in node_ID.keys() else None),
+                node_label=node_ID['node_label'] if 'node_label' in node_ID.keys() else None),
             data=data,
             relation_claims=relation_claims
         )
@@ -43,65 +43,65 @@ class Node_Manager:
 
     @staticmethod
     def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
-                     rel_from_to_self: str = None,
-                     rel_self_to_from: str = None):
+                     rel_self_to_to: str = None,
+                     rel_to_to_self: str = None):
 
         relations:  Dict[structure.node_structs.RelationStruct] = dict()
 
-        if rel_from_to_self != None:
+        if rel_self_to_to != None:
             exists = False
             for node_ in check_nodes:
                 # TODO check if relation is already exists in this node
                 for relation_claim in node_.relation_claims:
-                    if rel_from_to_self == relation_claim.relation.relation_name:
+                    if rel_self_to_to == relation_claim.relation.relation_name:
                         exists = True
-                        relations['from_to_self'] = relation_claim.relation
+                        relations['self_to_to'] = relation_claim.relation
                         break
             if not exists:
                 relation = structure.node_structs.RelationStruct(
-                    relation_name=rel_from_to_self)
+                    relation_name=rel_self_to_to)
                 relation.__hash__()
-                relations['from_to_self'] = relation
+                relations['self_to_to'] = relation
 
-        if rel_self_to_from != None:
+        if rel_to_to_self != None:
             exists = False
             for node_ in check_nodes:
                 # TODO check if relation is already exists in this node
                 for relation_claim in node_.relation_claims:
-                    if rel_self_to_from == relation_claim.relation.relation_name:
+                    if rel_to_to_self == relation_claim.relation.relation_name:
                         exists = True
-                        relations['self_to_from'] = relation_claim.relation
+                        relations['to_to_self'] = relation_claim.relation
                         break
             if not exists:
                 relation = structure.node_structs.RelationStruct(
-                    relation_name=rel_self_to_from)
+                    relation_name=rel_to_to_self)
                 relation.__hash__()
-                relations['self_to_from'] = relation
+                relations['to_to_self'] = relation
 
         return relations
 
     @staticmethod
-    def add_relation_claim(from_node: structure.node_structs.NodeStruct,
+    def add_relation_claim(node_: structure.node_structs.NodeStruct,
                            to_node: structure.node_structs.NodeStruct,
-                           rel_from_to_self: str = None,
-                           rel_self_to_from: str = None):
+                           rel_self_to_to: str = None,
+                           rel_to_to_self: str = None):
 
         relations = Node_Manager.add_relation(
-            [from_node, to_node], rel_from_to_self, rel_self_to_from)
+            [node_, to_node], rel_self_to_to, rel_to_to_self)
         Debug_Tools.debug_msg(relations)
 
         relation_claims: Set[structure.node_structs.RelationStruct] = set()
-        if rel_from_to_self != None:
-            exists = False  # TODO check if relation claim already exists in from_node
-            for relation_claim in from_node.relation_claims:
+        if rel_self_to_to != None:
+            exists = False  # TODO check if relation claim already exists in node_
+            for relation_claim in node_.relation_claims:
                 bools = [False, False, False]
                 if relation_claim.to_node == to_node:
                     assert relation_claim.to_node._hash == to_node._hash
                     bools[0] = True
-                if relation_claim.relation.relation_name == relations['from_to_self']:
-                    assert relation_claim.relation._hash == relations['from_to_self']._hash
+                if relation_claim.relation.relation_name == relations['self_to_to']:
+                    assert relation_claim.relation._hash == relations['self_to_to']._hash
                     bools[1] = True
-                if relation_claim.rel_direction == 'from_to_self':
+                if relation_claim.rel_direction == 'self_to_to':
                     bools[2] = True
                 if bools[0] and bools[1] and bools[2]:
                     exists = True
@@ -109,26 +109,26 @@ class Node_Manager:
                     break
 
             if not exists:
-                relation:  structure.node_structs.RelationStruct = relations['from_to_self']
+                relation:  structure.node_structs.RelationStruct = relations['self_to_to']
                 relation_claim = structure.node_structs.RelationClaimStruct(
                     to_node=to_node,
                     relation=relation,
-                    rel_direction='from_to_self'
+                    rel_direction='self_to_to'
                 )
                 # relation_claim.__hash__()
                 relation_claims.add(relation_claim)
 
-        if rel_self_to_from != None:
-            exists = False  # TODO check if relation claim already exists in from_node
-            for relation_claim in from_node.relation_claims:
+        if rel_to_to_self != None:
+            exists = False  # TODO check if relation claim already exists in node_
+            for relation_claim in node_.relation_claims:
                 bools = [False, False, False]
                 if relation_claim.to_node == to_node:
                     assert relation_claim.to_node._hash == to_node._hash
                     bools[0] = True
-                if relation_claim.relation.relation_name == relations['self_to_from']:
-                    assert relation_claim.relation._hash == relations['self_to_from']._hash
+                if relation_claim.relation.relation_name == relations['to_to_self']:
+                    assert relation_claim.relation._hash == relations['to_to_self']._hash
                     bools[1] = True
-                if relation_claim.rel_direction == 'self_to_from':
+                if relation_claim.rel_direction == 'to_to_self':
                     bools[2] = True
                 if bools[0] and bools[1] and bools[2]:
                     exists = True
@@ -136,11 +136,11 @@ class Node_Manager:
                     break
 
             if not exists:
-                relation:  structure.node_structs.RelationStruct = relations['self_to_from']
+                relation:  structure.node_structs.RelationStruct = relations['to_to_self']
                 relation_claim = structure.node_structs.RelationClaimStruct(
                     to_node=to_node,
                     relation=relation,
-                    rel_direction='self_to_from'
+                    rel_direction='to_to_self'
                 )
                 # relation_claim.__hash__()
                 relation_claims.add(relation_claim)
@@ -148,66 +148,66 @@ class Node_Manager:
         return relation_claims
 
     @staticmethod
-    def claim_relations(from_node: structure.node_structs.NodeStruct,
+    def claim_relations(node_: structure.node_structs.NodeStruct,
                         to_nodes: Set[structure.node_structs.NodeStruct],
-                        rel_from_to_self: str = None,
-                        rel_self_to_from: str = None):
+                        rel_self_to_to: str = None,
+                        rel_to_to_self: str = None):
         for to_node_ in to_nodes:
             relation_claims = Node_Manager.add_relation_claim(
-                from_node, to_node_, rel_from_to_self, rel_self_to_from)
-            from_node.relation_claims.update(relation_claims)
+                node_, to_node_, rel_self_to_to, rel_to_to_self)
+            node_.relation_claims.update(relation_claims)
 
     @staticmethod
-    def accept_relations(node_: structure.node_structs.NodeStruct, from_nodes: Set[structure.node_structs.NodeStruct]):
-        """ if nodes from from_nodes has relation claims towards node_ , create counter claims in to_node_
+    def accept_relations(node_: structure.node_structs.NodeStruct, node_s: Set[structure.node_structs.NodeStruct]):
+        """ if nodes from node_s has relation claims towards node_ , create counter claims in to_node_
             Arguments:
                 to_node_ {structure.node_structs.NodeStruct} -- [description]
-                from_nodes {List[structure.node_structs.NodeStruct]} -- [description]
+                node_s {List[structure.node_structs.NodeStruct]} -- [description]
         """
         Debug_Tools.debug_msg('Node accept_relations started')
-        for from_node in from_nodes:
-            for relation in from_node.relation_claims:
-                # check if from_node has a relation claim towards node_
+        for node_ in node_s:
+            for relation in node_.relation_claims:
+                # check if node_ has a relation claim towards node_
                 """
                 if relation.to_node == node_:
                     # instead of changing with the set during iteration
-                    if relation.rel_direction == 'self_to_from':
-                        Node_Manager.claim_relations(from_node=node_, to_nodes=[
-                                                     from_node], rel_from_to_self=relation.relation.relation_name)
-                    elif relation.rel_direction == 'from_to_self':
-                        Node_Manager.claim_relations(from_node=node_, to_nodes=[
-                                                     from_node], rel_self_to_from=relation.relation.relation_name)
+                    if relation.rel_direction == 'to_to_self':
+                        Node_Manager.claim_relations(node_=node_, to_nodes=[
+                                                     node_], rel_self_to_to=relation.relation.relation_name)
+                    elif relation.rel_direction == 'self_to_to':
+                        Node_Manager.claim_relations(node_=node_, to_nodes=[
+                                                     node_], rel_to_to_self=relation.relation.relation_name)
                 """
         Debug_Tools.debug_msg('Node accept_relations ended')
 
     @staticmethod
-    def create_related_node(from_node: structure.node_structs.NodeStruct,
-                            node_ID: structure.node_structs.NodeIdStruct = None,
+    def create_related_node(node_: structure.node_structs.NodeStruct,
+                            to_node_ID: structure.node_structs.NodeIdStruct = None,
                             data: dict = None,
-                            rel_from_to_self: str = None,
-                            rel_self_to_from: str = None):
+                            rel_self_to_to: str = None,
+                            rel_to_to_self: str = None):
         """
             use create_node() and then add relation_claims btw them
             [kwargs]
-                from_node
+                node_
                 node_ID
                 data
-                rel_from_to_self
-                rel_self_to_from
+                rel_self_to_to
+                rel_to_to_self
         """
-        new_node_ = Node_Manager.create_node(node_ID=node_ID, data=data)
+        new_node_ = Node_Manager.create_node(node_ID=to_node_ID, data=data)
 
         Node_Manager.claim_relations(
-            from_node=from_node,
+            node_=node_,
             to_nodes=[new_node_],
-            rel_from_to_self=rel_from_to_self,
-            rel_self_to_from=rel_self_to_from
+            rel_self_to_to=rel_self_to_to,
+            rel_to_to_self=rel_to_to_self
         )
         Node_Manager.claim_relations(
-            from_node=new_node_,
-            to_nodes=[from_node],
-            rel_from_to_self=rel_self_to_from,
-            rel_self_to_from=rel_from_to_self
+            node_=new_node_,
+            to_nodes=[node_],
+            rel_self_to_to=rel_to_to_self,
+            rel_to_to_self=rel_self_to_to
         )
 
         return new_node_
@@ -333,7 +333,7 @@ class Node_Manager:
             describer("---- RELATIONS ----")
             for count, relation_claim in enumerate(node_.relation_claims):
                 describer("\n-- relation {} :".format(count))
-                #print('from_node : ', _.from_node.node_ID)
+                #print('node_ : ', _.node_.node_ID)
                 describer('to_node : {}'.format(
                     relation_claim.to_node.node_ID))
                 if to_node_data_keys != None:
