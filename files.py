@@ -13,21 +13,45 @@
 # limitations under the License.
 
 import yaml
+from typing import Set
 
 from . import structure
 from .debug import Debug_Tools
 
 
-def write(node_: structure.node_structs.NodeStruct, path):
+def write_cluster(node_cluster: structure.node_structs.NodeClusterStruct, path):
+    def write_node(node_: structure.node_structs.NodeStruct, file):
+        """
+        n'<node name>' n@<node unique hash>
+        r'<relation name>' r@<relation unique hash>
+
+        Arguments:
+            node_cluster {structure.node_structs.NodeClusterStruct, path} -- [description]
+            file {[type]} -- [description]
+        """
+        file.write("n@%s '%s'\n    %s\n"%(node_.node_ID.ID, node_.node_ID.node_label, node_.data))
+        #file.write("    {}\n    {}\n    {}\n".format(
+        #    node_.node_ID.node_label, node_.data))
+        for relation_claim in node_.relation_claims:
+            file.write("n@{} :r@{} -> n@{}\n".format(node_.node_ID.ID,
+                                                   relation_claim._hash, 
+                                                   relation_claim.to_node.node_ID.ID))
+            pass
 
     with open(path, 'w') as file:
-        # TODO write a set of relations
-        relations = set()
-        relations_ = set()
-        for rel_claim in node_.relation_claims:
-            relations.add(rel_claim.relation)
-        relations = list(relations)
-        Debug_Tools.debug_msg(relations, False)
+        # WRITE FILE
+        file.write("{}\n".format(node_cluster.cluster_name))
+        
+        # write all unique relations in the cluster
+        for relation in node_cluster.relations:
+            file.write("r@%s '%s'\n"%(relation._hash, relation.relation_name))
+            
+        file.write("")
+        
+        for node_ in node_cluster.nodes:
+            # file.write(yaml.dump(node_))
+            write_node(node_, file=file)
+        """
         for relation in relations:
             for relation_ in relations:
                 if id(relation) != id(relation_):
@@ -36,3 +60,4 @@ def write(node_: structure.node_structs.NodeStruct, path):
         Debug_Tools.debug_msg(relations, False)
         # file.write(yaml.dump(relations))
         file.write(yaml.dump(node_))
+        """

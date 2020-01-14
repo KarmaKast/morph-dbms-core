@@ -19,82 +19,83 @@ from . import structure
 from .debug import Debug_Tools
 
 
-class Node_Manager:
+def create_node(node_ID: dict, data=None, relation_claims: Set[structure.node_structs.RelationClaimStruct] = None):
+    """[kwargs]
+    node_ID
+    data
+    relation_claims
+    """
+    node_ = structure.node_structs.NodeStruct(
+        node_ID=structure.node_structs.NodeIdStruct(
+            ID=node_ID['ID'] if 'ID' in node_ID.keys() else None,
+            node_label=node_ID['node_label'] if 'node_label' in node_ID.keys() else None),
+        data=data if data != None else dict(),
+        relation_claims=relation_claims if relation_claims != None else set()
+    )
 
-    @staticmethod
-    def create_node(node_ID: dict, data={}, relation_claims=set()):
-        """[kwargs]
-        node_ID
-        data
-        relation_claims
-        """
-        node_ = structure.node_structs.NodeStruct(
-            node_ID=structure.node_structs.NodeIdStruct(
-                ID=node_ID['ID'] if 'ID' in node_ID.keys() else 0,
-                node_label=node_ID['node_label'] if 'node_label' in node_ID.keys() else None),
-            data=data,
-            relation_claims=relation_claims
-        )
+    node_.__hash__()
+    Debug_Tools.debug_msg('{} is created'.format(node_), True)
+    Debug_Tools.debug_msg("%s" % (id(node_.relation_claims)), False)
 
-        node_.__hash__()
-        Debug_Tools.debug_msg('{} is created'.format(node_), True)
+    return node_
 
-        return node_
 
-    @staticmethod
-    def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
-                     rel_self_to_to: str = None,
-                     rel_to_to_self: str = None):
+def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
+                 rel_self_to_to: str = None,
+                 rel_to_to_self: str = None):
 
-        relations:  Dict[structure.node_structs.RelationStruct] = dict()
+    relations:  Dict[structure.node_structs.RelationStruct] = dict()
 
-        if rel_self_to_to != None:
-            exists = False
-            for node_ in check_nodes:
-                # TODO check if relation is already exists in this node
-                for relation_claim in node_.relation_claims:
-                    if rel_self_to_to == relation_claim.relation.relation_name:
-                        exists = True
-                        relations['self_to_to'] = relation_claim.relation
-                        break
-            if not exists:
-                relation = structure.node_structs.RelationStruct(
-                    relation_name=rel_self_to_to)
-                relation.__hash__()
-                relations['self_to_to'] = relation
+    if rel_self_to_to != None:
+        exists = False
+        for node_ in check_nodes:
+            # DOING check if relation is already exists in this node
+            for relation_claim in node_.relation_claims:
+                if rel_self_to_to == relation_claim.relation.relation_name:
+                    exists = True
+                    relations['self_to_to'] = relation_claim.relation
+                    break
+        if not exists:
+            relation = structure.node_structs.RelationStruct(
+                relation_name=rel_self_to_to)
+            relation.__hash__()
+            relations['self_to_to'] = relation
 
-        if rel_to_to_self != None:
-            exists = False
-            for node_ in check_nodes:
-                # TODO check if relation is already exists in this node
-                for relation_claim in node_.relation_claims:
-                    if rel_to_to_self == relation_claim.relation.relation_name:
-                        exists = True
-                        relations['to_to_self'] = relation_claim.relation
-                        break
-            if not exists:
-                relation = structure.node_structs.RelationStruct(
-                    relation_name=rel_to_to_self)
-                relation.__hash__()
-                relations['to_to_self'] = relation
+    if rel_to_to_self != None:
+        exists = False
+        for node_ in check_nodes:
+            # TODO check if relation is already exists in this node
+            for relation_claim in node_.relation_claims:
+                if rel_to_to_self == relation_claim.relation.relation_name:
+                    exists = True
+                    relations['to_to_self'] = relation_claim.relation
+                    break
+        if not exists:
+            relation = structure.node_structs.RelationStruct(
+                relation_name=rel_to_to_self)
+            relation.__hash__()
+            relations['to_to_self'] = relation
 
-        return relations
+    return relations
 
-    @staticmethod
-    def add_relation_claim(node_: structure.node_structs.NodeStruct,
-                           to_node: structure.node_structs.NodeStruct,
-                           rel_self_to_to: str = None,
-                           rel_to_to_self: str = None):
 
-        # check if node_ and to_node_ is same
-        if node_._hash == to_node._hash:
-            Debug_Tools.debug_msg('node and to_node same. How?')
+def add_relation_claim(node_: structure.node_structs.NodeStruct,
+                       to_node: structure.node_structs.NodeStruct,
+                       relation: structure.node_structs.RelationStruct = None,
+                       rel_self_to_to: str = None,
+                       rel_to_to_self: str = None):
 
-        relations = Node_Manager.add_relation(
+    # check if node_ and to_node_ is same
+    if node_._hash == to_node._hash:
+        Debug_Tools.debug_msg('node and to_node same. How?')
+
+    relation_claims: Set[structure.node_structs.RelationStruct] = set()
+
+    if relation == None:
+        relations = add_relation(
             [node_, to_node], rel_self_to_to, rel_to_to_self)
         Debug_Tools.debug_msg(relations)
 
-        relation_claims: Set[structure.node_structs.RelationStruct] = set()
         if rel_self_to_to != None:
             exists = False  # TODO check if relation claim already exists in node_
             for relation_claim in node_.relation_claims:
@@ -113,10 +114,10 @@ class Node_Manager:
                     break
 
             if not exists:
-                relation:  structure.node_structs.RelationStruct = relations['self_to_to']
+                _relation:  structure.node_structs.RelationStruct = relations['self_to_to']
                 relation_claim = structure.node_structs.RelationClaimStruct(
                     to_node=to_node,
-                    relation=relation,
+                    relation=_relation,
                     rel_direction='self_to_to'
                 )
                 # relation_claim.__hash__()
@@ -140,300 +141,260 @@ class Node_Manager:
                     break
 
             if not exists:
-                relation:  structure.node_structs.RelationStruct = relations['to_to_self']
+                _relation:  structure.node_structs.RelationStruct = relations['to_to_self']
                 relation_claim = structure.node_structs.RelationClaimStruct(
                     to_node=to_node,
-                    relation=relation,
+                    relation=_relation,
                     rel_direction='to_to_self'
                 )
                 # relation_claim.__hash__()
                 relation_claims.add(relation_claim)
-            Debug_Tools.debug_msg(relation_claims)
-        return relation_claims
+        Debug_Tools.debug_msg(relation_claims)
+    else:
+        # use given relation
+        directions = set()
+        # 'self_to_to' if (rel_self_to_to==True or rel_to_to_self==False) else 'to_to_self'
+        if rel_self_to_to != None:
+            if rel_self_to_to == True:
+                directions.add('self_to_to')
+        if rel_to_to_self != None:
+            if rel_to_to_self == True:
+                directions.add('to_to_self')
+        for direction in directions:
+            relation_claim = structure.node_structs.RelationClaimStruct(
+                to_node=to_node,
+                relation=relation,
+                rel_direction=direction
+            )
+            relation_claims.add(relation_claim)
+        """relation_claim = structure.node_structs.RelationClaimStruct(
+            to_node=to_node,
+            relation=relation,
+            rel_direction='to_to_self'
+        )
+        relation_claims.add(relation_claim)"""
+        pass
+    return relation_claims
 
-    @staticmethod
-    def claim_relations(node_: structure.node_structs.NodeStruct,
-                        to_nodes: Set[structure.node_structs.NodeStruct],
-                        rel_self_to_to: str = None,
-                        rel_to_to_self: str = None):
-        for to_node_ in to_nodes:
-            relation_claims = Node_Manager.add_relation_claim(
-                node_, to_node_, rel_self_to_to, rel_to_to_self)
-            node_.relation_claims.update(relation_claims)
 
-    @staticmethod
-    def accept_relations(node_: structure.node_structs.NodeStruct, node_s: Set[structure.node_structs.NodeStruct]):
-        """ if nodes from node_s has relation claims towards node_ , create counter claims in to_node_
-            Arguments:
-                to_node_ {structure.node_structs.NodeStruct} -- [description]
-                node_s {List[structure.node_structs.NodeStruct]} -- [description]
-        """
-        Debug_Tools.debug_msg('Node accept_relations started')
-        for node_ in node_s:
-            for relation in node_.relation_claims:
-                # check if node_ has a relation claim towards node_
-                """
-                if relation.to_node == node_:
-                    # instead of changing with the set during iteration
-                    if relation.rel_direction == 'to_to_self':
-                        Node_Manager.claim_relations(node_=node_, to_nodes=[
-                                                     node_], rel_self_to_to=relation.relation.relation_name)
-                    elif relation.rel_direction == 'self_to_to':
-                        Node_Manager.claim_relations(node_=node_, to_nodes=[
-                                                     node_], rel_to_to_self=relation.relation.relation_name)
-                """
-        Debug_Tools.debug_msg('Node accept_relations ended')
+def claim_relations(node_: structure.node_structs.NodeStruct,
+                    to_nodes: Set[structure.node_structs.NodeStruct],
+                    relation=None,
+                    rel_self_to_to: str = None,
+                    rel_to_to_self: str = None):
+    for to_node_ in to_nodes:
+        relation_claims = add_relation_claim(
+            node_, to_node_, relation, rel_self_to_to, rel_to_to_self)
+        node_.relation_claims.update(relation_claims)
 
-    @staticmethod
-    def create_related_node(node_: structure.node_structs.NodeStruct,
-                            to_node_ID: structure.node_structs.NodeIdStruct = None,
-                            data: dict = None,
-                            rel_self_to_to: str = None,
-                            rel_to_to_self: str = None):
-        """
-            use create_node() and then add relation_claims btw them
-            [kwargs]
-                node_
-                node_ID
-                data
-                rel_self_to_to
-                rel_to_to_self
-        """
-        new_node_ = Node_Manager.create_node(node_ID=to_node_ID, data=data)
 
-        Node_Manager.claim_relations(
+def accept_relations(node_: structure.node_structs.NodeStruct, node_s: Set[structure.node_structs.NodeStruct]):
+    """ if nodes from node_s has relation claims towards node_ , create counter claims in to_node_
+        Arguments:
+            to_node_ {structure.node_structs.NodeStruct} -- [description]
+            node_s {List[structure.node_structs.NodeStruct]} -- [description]
+    """
+    Debug_Tools.debug_msg('Node accept_relations started')
+    for node_ in node_s:
+        for relation in node_.relation_claims:
+            # check if node_ has a relation claim towards node_
+            """
+            if relation.to_node == node_:
+                # instead of changing with the set during iteration
+                if relation.rel_direction == 'to_to_self':
+                    claim_relations(node_=node_, to_nodes=[
+                                                    node_], rel_self_to_to=relation.relation.relation_name)
+                elif relation.rel_direction == 'self_to_to':
+                    claim_relations(node_=node_, to_nodes=[
+                                                    node_], rel_to_to_self=relation.relation.relation_name)
+            """
+    Debug_Tools.debug_msg('Node accept_relations ended')
+
+
+def create_related_node(node_: structure.node_structs.NodeStruct,
+                        to_node_ID: structure.node_structs.NodeIdStruct = None,
+                        data: dict = None,
+                        relations_self_to_to: str = None,
+                        relations_to_to_self: str = None):
+    """
+        use create_node() and then add relation_claims btw them
+        [kwargs]
+            node_
+            node_ID
+            data
+            rel_self_to_to
+            rel_to_to_self
+    """
+    new_node_ = create_node(node_ID=to_node_ID, data=data)
+
+    for rel_self_to_to in relations_self_to_to:
+        claim_relations(
             node_=node_,
             to_nodes=[new_node_],
-            rel_self_to_to=rel_self_to_to,
-            rel_to_to_self=rel_to_to_self
+            relation=rel_self_to_to,
+            rel_self_to_to=True,
         )
-        Node_Manager.claim_relations(
-            node_=new_node_,
-            to_nodes=[node_],
-            rel_self_to_to=rel_to_to_self,
-            rel_to_to_self=rel_self_to_to
+    for rel_to_to_self in relations_to_to_self:
+        claim_relations(
+            node_=node_,
+            to_nodes=[new_node_],
+            relation=rel_to_to_self,
+            rel_to_to_self=True,
         )
 
-        return new_node_
+    return new_node_
 
-    @staticmethod
-    def get_rel_node(
+
+def get_rel_node(
+        node_: structure.node_structs.NodeStruct,
+        hash_deep: List[int] = None,
+        nodeID_deep: List[structure.node_structs.NodeIdStruct] = None,
+        data_deep: List[dict] = None):
+    """[summary]
+
+        Arguments:
+            node_ {structure.node_structs.NodeStruct} -- [description]
+
+        Keyword Arguments:
+            hash_deep {List[int]} -- [description] (default: {None})
+            nodeID_deep {List[structure.node_structs.NodeIdStruct]} -- [description] (default: {None})
+            data_deep {List[dict]} -- [description] (default: {None})
+
+        Returns:
+            [type] -- [description]
+    """
+    # TODO deal with wrong inputs
+    def _get_rel_node(
             node_: structure.node_structs.NodeStruct,
-            hash_deep: List[int] = None,
-            nodeID_deep: List[structure.node_structs.NodeIdStruct] = None,
-            data_deep: List[dict] = None):
+            hash_shallow: int = None,
+            nodeID_shallow: structure.node_structs.NodeIdStruct = None,
+            data_shallow: dict = None):
         """[summary]
 
             Arguments:
                 node_ {structure.node_structs.NodeStruct} -- [description]
 
             Keyword Arguments:
-                hash_deep {List[int]} -- [description] (default: {None})
-                nodeID_deep {List[structure.node_structs.NodeIdStruct]} -- [description] (default: {None})
-                data_deep {List[dict]} -- [description] (default: {None})
+                hash_shallow {int} -- [description] (default: {None})
+                nodeID_shallow {structure.node_structs.NodeIdStruct} -- [description] (default: {None})
+                data_shallow {dict} -- [description] (default: {None})
 
             Returns:
                 [type] -- [description]
         """
-        # TODO deal with wrong inputs
-        def _get_rel_node(
-                node_: structure.node_structs.NodeStruct,
-                hash_shallow: int = None,
-                nodeID_shallow: structure.node_structs.NodeIdStruct = None,
-                data_shallow: dict = None):
-            """[summary]
-
-                Arguments:
-                    node_ {structure.node_structs.NodeStruct} -- [description]
-
-                Keyword Arguments:
-                    hash_shallow {int} -- [description] (default: {None})
-                    nodeID_shallow {structure.node_structs.NodeIdStruct} -- [description] (default: {None})
-                    data_shallow {dict} -- [description] (default: {None})
-
-                Returns:
-                    [type] -- [description]
-            """
-            # only first order relations
-            ret_node_ = None
-            for relation_claim in node_.relation_claims:
-                if hash_shallow != None:
-                    if hash_shallow == relation_claim.to_node._hash:
-                        ret_node_ = relation_claim.to_node
-                        break
-                elif nodeID_shallow != None:
-                    # if only ID is given and not node_name
-                    if nodeID_shallow['ID'] == relation_claim.to_node.node_ID.ID:
-                        ret_node_ = relation_claim.to_node
-                        break  # hoping there are no duplicates
-                    # TODO if only node_name is give
-                    # TODO if both ID and node_name is given
-                elif data_shallow != None:
-                    do_ret = True
-                    for key in data_shallow.keys():
-                        if key in relation_claim.to_node.data.keys():
-                            if data_shallow[key] != relation_claim.to_node.data[key]:
-                                do_ret = False
-                                break
-                    if do_ret:
-                        ret_node_ = relation_claim.to_node
-                        break
-
-            return ret_node_
+        # only first order relations
         ret_node_ = None
-        if hash_deep != None:
-            ret_node_ = _get_rel_node(node_, hash_shallow=hash_deep[0])
-            for i in hash_deep[1:]:
-                ret_node_ = _get_rel_node(node_, hash_shallow=i)
-        elif nodeID_deep != None:
-            ret_node_ = _get_rel_node(node_, nodeID_shallow=nodeID_deep[0])
-            for i in nodeID_deep[1:]:
-                ret_node_ = _get_rel_node(node_, nodeID_shallow=i)
-        elif data_deep != None:
-            ret_node_ = _get_rel_node(node_, data_shallow=data_deep[0])
-            for i in data_deep[1:]:
-                ret_node_ = _get_rel_node(node_, data_shallow=i)
+        for relation_claim in node_.relation_claims:
+            if hash_shallow != None:
+                if hash_shallow == relation_claim.to_node._hash:
+                    ret_node_ = relation_claim.to_node
+                    break
+            elif nodeID_shallow != None:
+                # if only ID is given and not node_name
+                if nodeID_shallow['ID'] == relation_claim.to_node.node_ID.ID:
+                    ret_node_ = relation_claim.to_node
+                    break  # hoping there are no duplicates
+                # TODO if only node_name is give
+                # TODO if both ID and node_name is given
+            elif data_shallow != None:
+                do_ret = True
+                for key in data_shallow.keys():
+                    if key in relation_claim.to_node.data.keys():
+                        if data_shallow[key] != relation_claim.to_node.data[key]:
+                            do_ret = False
+                            break
+                if do_ret:
+                    ret_node_ = relation_claim.to_node
+                    break
+
         return ret_node_
+    ret_node_ = None
+    if hash_deep != None:
+        ret_node_ = _get_rel_node(node_, hash_shallow=hash_deep[0])
+        for i in hash_deep[1:]:
+            ret_node_ = _get_rel_node(node_, hash_shallow=i)
+    elif nodeID_deep != None:
+        ret_node_ = _get_rel_node(node_, nodeID_shallow=nodeID_deep[0])
+        for i in nodeID_deep[1:]:
+            ret_node_ = _get_rel_node(node_, nodeID_shallow=i)
+    elif data_deep != None:
+        ret_node_ = _get_rel_node(node_, data_shallow=data_deep[0])
+        for i in data_deep[1:]:
+            ret_node_ = _get_rel_node(node_, data_shallow=i)
+    return ret_node_
 
-    @staticmethod
-    def get_rel_nodes(
-            node_,
-            hash_deep_list: List[List[int]] = None,
-            nodeID_deep_list: List[List[structure.node_structs.NodeIdStruct]] = None,
-            data_deep_list: List[List[dict]] = None):
 
-        _nodes: List[structure.node_structs.NodeStruct] = []
-        if hash_deep_list != None:
-            for hash_deep in hash_deep_list:
-                _nodes.append(Node_Manager.get_rel_node(
-                    node_, hash_deep=hash_deep))
-        elif nodeID_deep_list != None:
-            for nodeID_deep in nodeID_deep_list:
-                _nodes.append(Node_Manager.get_rel_node(
-                    node_, nodeID_deep=nodeID_deep))
-        elif data_deep_list != None:
-            for data_deep in data_deep_list:
-                _nodes.append(Node_Manager.get_rel_node(
-                    node_, data_deep=data_deep))
+def get_rel_nodes(
+        node_,
+        hash_deep_list: List[List[int]] = None,
+        nodeID_deep_list: List[List[structure.node_structs.NodeIdStruct]] = None,
+        data_deep_list: List[List[dict]] = None):
 
-        return _nodes
+    _nodes: List[structure.node_structs.NodeStruct] = []
+    if hash_deep_list != None:
+        for hash_deep in hash_deep_list:
+            _nodes.append(get_rel_node(
+                node_, hash_deep=hash_deep))
+    elif nodeID_deep_list != None:
+        for nodeID_deep in nodeID_deep_list:
+            _nodes.append(get_rel_node(
+                node_, nodeID_deep=nodeID_deep))
+    elif data_deep_list != None:
+        for data_deep in data_deep_list:
+            _nodes.append(get_rel_node(
+                node_, data_deep=data_deep))
 
-    @staticmethod
-    def describe(node_: structure.node_structs.NodeStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
-        # describe self.node_data
-        def describer(msg=''):
-            if describer_args == None:
-                describer_(msg)
-            else:
-                describer_(msg, *describer_args)
-            # TODO support **kwargs also
+    return _nodes
 
-        describer()
-        describer("-----------------------------------------------------------")
-        if mode == 'compact':
-            describer("FROM : {}".format(node_.node_ID))
-            describer("---- DATA ----")
-            describer(node_.data)
-            describer("---- RELATIONS ----")
-            for count, relation_claim in enumerate(node_.relation_claims):
-                describer("\n-- relation {} :".format(count))
-                #print('node_ : ', _.node_.node_ID)
-                describer('to_node : {}'.format(
-                    relation_claim.to_node.node_ID))
-                if to_node_data_keys != None:
-                    data = [(key, relation_claim.to_node.data[key]) if key in relation_claim.to_node.data.keys(
-                    ) else ('', '') for key in to_node_data_keys]
-                    data = dict(data)
-                    describer('   to_node_data: {}'.format(data))
-                describer('{} = {}'.format(relation_claim.rel_direction,
-                                           relation_claim.relation.relation_name))
+
+def describe(node_: structure.node_structs.NodeStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
+    # describe self.node_data
+    def describer(msg=''):
+        if describer_args == None:
+            describer_(msg)
         else:
-            describer("FROM : {}".format(node_.node_ID))
-            describer("---- DATA ----")
-            for data_ in node_.data.items():
-                describer("{} : {}".format(data_[0], data_[1]))
-            describer("---- RELATIONS ----")
-            for count, relation_claim in enumerate(node_.relation_claims):
-                describer("\n-- relation {} :".format(count))
-                describer('to_node')
-                describer(relation_claim.to_node.node_ID)
-                if to_node_data_keys != None:
-                    for key in to_node_data_keys:
-                        if key in relation_claim.to_node.data.keys():
-                            describer((key, relation_claim.to_node.data[key]))
-                        else:
-                            describer(())
-                describer('relation_name = {}\nrel_direction = {}'.format(
-                    relation_claim.relation.relation_name, relation_claim.rel_direction))
+            describer_(msg, *describer_args)
+        # TODO support **kwargs also
 
-    @staticmethod
-    def delete_node(node_: structure.node_structs.NodeStruct, mode=None):
-        # objects cannot be directly deleted in python. If nothing is referencing the object its deleted
-        return None
-
-
-class Node_Cluster:
-    @staticmethod
-    def create_cluster(seed_node: structure.node_structs.NodeStruct = None, cluster_name=None):
-        """
-        creates a list of nodes from a related collected of nodes using a seed_node
-
-        Arguments:
-            seed_node {structure.node_structs.NodeStruct} -- any node that is related to the collection of related nodes
-
-        Returns:
-            [type] -- [description]
-        """
-        Debug_Tools.debug_msg('NodeCluster create_cluster started')
-
-        nodeCluster_ = structure.node_structs.NodeClusterStruct(
-            cluster_name=cluster_name,
-            nodes=set(),
-            relations=set()
-        )
-        if seed_node != None:
-            nodeCluster_.nodes.add(seed_node)
-
-            def add_relations(node_: structure.node_structs.NodeStruct):
-                for relation in node_.relation_claims:
-                    if relation.to_node not in nodeCluster_.nodes:
-                        nodeCluster_.nodes.add(relation.to_node)
-                        add_relations(relation.to_node)
-            add_relations(seed_node)
-
-        Debug_Tools.debug_msg('NodeCluster create_cluster ended')
-        return nodeCluster_
-
-    @staticmethod
-    def refresh_cluster(node_Cluster):
-        pass
-
-    @staticmethod
-    def generate_IDs(nodeCluster_: structure.node_structs.NodeClusterStruct):
-        Debug_Tools.debug_msg('NodeCluster generate_IDs started', True)
-
-        def generate_relative(nodeCluster_: structure.node_structs.NodeClusterStruct):
-            """ NOTE all nodes in the loaded into the memory most likely already has relatively unique hashes.
-            The point of this function is to not depend on that mechanism to guaranty relatively unique hashes.
-            """
-            pass
-        Debug_Tools.debug_msg('NodeCluster generate_IDs ended', True)
-
-    @staticmethod
-    def describe(node_cluster: structure.node_structs.NodeClusterStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
-        Debug_Tools.debug_msg('NodeCluster describe started', True)
-        describer_('Cluster name: {}'.format(node_cluster.cluster_name))
-        for node_ in node_cluster.nodes:
-            Node_Manager.describe(
-                node_=node_,
-                to_node_data_keys=to_node_data_keys,
-                mode=mode,
-                describer_=describer_,
-                describer_args=describer_args)
-        Debug_Tools.debug_msg('NodeCluster describe ended', True)
+    describer()
+    describer("-----------------------------------------------------------")
+    if mode == 'compact':
+        describer("FROM : {}".format(node_.node_ID))
+        describer("---- DATA ----")
+        describer(node_.data)
+        describer("---- RELATIONS ----")
+        for count, relation_claim in enumerate(node_.relation_claims):
+            describer("\n-- relation {} :".format(count))
+            #print('node_ : ', _.node_.node_ID)
+            describer('to_node : {}'.format(
+                relation_claim.to_node.node_ID))
+            if to_node_data_keys != None:
+                data = [(key, relation_claim.to_node.data[key]) if key in relation_claim.to_node.data.keys(
+                ) else ('', '') for key in to_node_data_keys]
+                data = dict(data)
+                describer('   to_node_data: {}'.format(data))
+            describer('{} = {}'.format(relation_claim.rel_direction,
+                                       relation_claim.relation.relation_name))
+    else:
+        describer("FROM : {}".format(node_.node_ID))
+        describer("---- DATA ----")
+        for data_ in node_.data.items():
+            describer("{} : {}".format(data_[0], data_[1]))
+        describer("---- RELATIONS ----")
+        for count, relation_claim in enumerate(node_.relation_claims):
+            describer("\n-- relation {} :".format(count))
+            describer('to_node')
+            describer(relation_claim.to_node.node_ID)
+            if to_node_data_keys != None:
+                for key in to_node_data_keys:
+                    if key in relation_claim.to_node.data.keys():
+                        describer((key, relation_claim.to_node.data[key]))
+                    else:
+                        describer(())
+            describer('relation_name = {}\nrel_direction = {}'.format(
+                relation_claim.relation.relation_name, relation_claim.rel_direction))
 
 
-class Model:
-
-    # @staticmethod
-    pass
+def delete_node(node_: structure.node_structs.NodeStruct, mode=None):
+    # objects cannot be directly deleted in python. If nothing is referencing the object its deleted
+    return None

@@ -23,7 +23,7 @@ class Debug_Tools:
     forcu_off = False  # main off switch
 
     @staticmethod
-    def debug_msg(msg, local_debug=True):
+    def debug_msg(msg: str, local_debug: bool=True):
         """ 
         If DEBUG_GLOBAL or local_debug is true print the msg
 
@@ -55,7 +55,7 @@ class Debug_Tools_obj:
         self.force_on = False  # if true overrides local_debug preference
         self.forcu_off = False  # main off switch
 
-    def debug_msg(msg, local_bool=True):
+    def debug_msg(msg: str, local_bool: bool=True):
         """ 
         If DEBUG_GLOBAL or local_debug is true print the msg
 

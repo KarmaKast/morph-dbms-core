@@ -100,7 +100,8 @@ class RelationClaimStruct:
     to_node: NodeStruct
     # what is the first node to the second node
     relation: RelationStruct
-    rel_direction: str  # [to_to_from,from_to_to] / [ttf,ftt]
+    rel_direction: str  
+    # [to_to_from,from_to_to] / [ttf,ftt]
 
     def __hash__(self):
         """
