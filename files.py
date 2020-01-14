@@ -29,12 +29,12 @@ def write_cluster(node_cluster: structure.node_structs.NodeClusterStruct, path):
             node_cluster {structure.node_structs.NodeClusterStruct, path} -- [description]
             file {[type]} -- [description]
         """
-        file.write("n@%s '%s'\n    %s\n"%(node_.node_ID.ID, node_.node_ID.node_label, node_.data))
+        
         #file.write("    {}\n    {}\n    {}\n".format(
         #    node_.node_ID.node_label, node_.data))
         for relation_claim in node_.relation_claims:
             file.write("n@{} :r@{} -> n@{}\n".format(node_.node_ID.ID,
-                                                   relation_claim._hash, 
+                                                   relation_claim.relation.ID, 
                                                    relation_claim.to_node.node_ID.ID))
             pass
 
@@ -43,13 +43,14 @@ def write_cluster(node_cluster: structure.node_structs.NodeClusterStruct, path):
         file.write("{}\n".format(node_cluster.cluster_name))
         
         # write all unique relations in the cluster
-        for relation in node_cluster.relations:
-            file.write("r@%s '%s'\n"%(relation._hash, relation.relation_name))
+        for _,relation in node_cluster.relations.items():
+            file.write("r@%s '%s'\n"%(relation.ID, relation.relation_name))
             
         file.write("")
         
         for node_ in node_cluster.nodes:
-            # file.write(yaml.dump(node_))
+            file.write("n@%s '%s'\n    %s\n"%(node_.node_ID.ID, node_.node_ID.node_label, node_.data))
+        for node_ in node_cluster.nodes:
             write_node(node_, file=file)
         """
         for relation in relations:

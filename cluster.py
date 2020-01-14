@@ -1,4 +1,5 @@
 from typing import List, Set, Dict, Any
+import uuid
 
 from . import structure
 from .debug import Debug_Tools
@@ -22,7 +23,7 @@ def create_cluster(cluster_name=None,
     nodeCluster_ = structure.node_structs.NodeClusterStruct(
         cluster_name=cluster_name,
         nodes=set(),
-        relations=set()
+        relations=dict()
     )
     if nodes_ != None:
         nodeCluster_.nodes.update(nodes_)
@@ -31,6 +32,20 @@ def create_cluster(cluster_name=None,
 
     Debug_Tools.debug_msg('NodeCluster create_cluster ended')
     return nodeCluster_
+
+def create_relation(nodeCluster_: structure.node_structs.NodeClusterStruct,
+                 relation = None,
+                 ):
+    """
+    create a relation and add it to cluster
+    """
+    _ID = str(uuid.uuid1())
+    relation_obj = structure.node_structs.RelationStruct(ID=_ID,relation_name=relation)
+    relation_obj.__hash__()
+    nodeCluster_.relations[relation_obj.ID] = relation_obj
+    
+    return relation_obj.ID
+    
 
 def refresh_cluster(node_Cluster):
     pass

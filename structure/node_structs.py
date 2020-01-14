@@ -58,6 +58,7 @@ class NodeStruct:
 
 @dataclass
 class RelationStruct:
+    ID: str
     relation_name: str
     #rel_direction : str
 
@@ -136,4 +137,4 @@ class RelationClaimStruct:
 class NodeClusterStruct:
     cluster_name: str
     nodes: Set[NodeStruct]
-    relations: Set[RelationStruct]
+    relations: dict()

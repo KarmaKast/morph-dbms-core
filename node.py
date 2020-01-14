@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import List, Set, Dict, Any
+import uuid
 
 #import nodeLib
 from . import structure
@@ -25,9 +26,10 @@ def create_node(node_ID: dict, data=None, relation_claims: Set[structure.node_st
     data
     relation_claims
     """
+    _ID = node_ID['ID'] if 'ID' in node_ID.keys() else uuid.uuid1()
     node_ = structure.node_structs.NodeStruct(
         node_ID=structure.node_structs.NodeIdStruct(
-            ID=node_ID['ID'] if 'ID' in node_ID.keys() else None,
+            ID=_ID,
             node_label=node_ID['node_label'] if 'node_label' in node_ID.keys() else None),
         data=data if data != None else dict(),
         relation_claims=relation_claims if relation_claims != None else set()
@@ -57,6 +59,7 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
                     break
         if not exists:
             relation = structure.node_structs.RelationStruct(
+                ID = uuid.uuid1(),
                 relation_name=rel_self_to_to)
             relation.__hash__()
             relations['self_to_to'] = relation
@@ -72,6 +75,7 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
                     break
         if not exists:
             relation = structure.node_structs.RelationStruct(
+                ID = uuid.uuid1(),
                 relation_name=rel_to_to_self)
             relation.__hash__()
             relations['to_to_self'] = relation
