@@ -1,3 +1,3 @@
 Welcome to the Node-Library wiki!
 
-Development State: Experimental (not recommended to use)
+Development State: Pre-release (drastic changes) Not ready for stable use.
