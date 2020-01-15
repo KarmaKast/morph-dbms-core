@@ -21,6 +21,7 @@ def create_cluster(cluster_name=None,
     Debug_Tools.debug_msg('NodeCluster create_cluster started')
 
     nodeCluster_ = structure.node_structs.NodeClusterStruct(
+        ID=str(uuid.uuid1()),
         cluster_name=cluster_name,
         nodes=set(),
         relations=dict()
@@ -44,7 +45,7 @@ def create_relation(nodeCluster_: structure.node_structs.NodeClusterStruct,
     relation_obj.__hash__()
     nodeCluster_.relations[relation_obj.ID] = relation_obj
     
-    return relation_obj.ID
+    return relation_obj
     
 
 def refresh_cluster(node_Cluster):

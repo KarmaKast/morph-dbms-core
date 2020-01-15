@@ -26,7 +26,7 @@ def create_node(node_ID: dict, data=None, relation_claims: Set[structure.node_st
     data
     relation_claims
     """
-    _ID = node_ID['ID'] if 'ID' in node_ID.keys() else uuid.uuid1()
+    _ID = node_ID['ID'] if 'ID' in node_ID.keys() else str(uuid.uuid1())
     node_ = structure.node_structs.NodeStruct(
         node_ID=structure.node_structs.NodeIdStruct(
             ID=_ID,
@@ -86,8 +86,7 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
 def add_relation_claim(node_: structure.node_structs.NodeStruct,
                        to_node: structure.node_structs.NodeStruct,
                        relation: structure.node_structs.RelationStruct = None,
-                       rel_self_to_to: str = None,
-                       rel_to_to_self: str = None):
+                       direction: str = None):
 
     # check if node_ and to_node_ is same
     if node_._hash == to_node._hash:
@@ -95,101 +94,22 @@ def add_relation_claim(node_: structure.node_structs.NodeStruct,
 
     relation_claims: Set[structure.node_structs.RelationStruct] = set()
 
-    if relation == None:
-        relations = add_relation(
-            [node_, to_node], rel_self_to_to, rel_to_to_self)
-        Debug_Tools.debug_msg(relations)
-
-        if rel_self_to_to != None:
-            exists = False  # TODO check if relation claim already exists in node_
-            for relation_claim in node_.relation_claims:
-                bools = [False, False, False]
-                if relation_claim.to_node == to_node:
-                    assert relation_claim.to_node._hash == to_node._hash
-                    bools[0] = True
-                if relation_claim.relation.relation_name == relations['self_to_to']:
-                    assert relation_claim.relation._hash == relations['self_to_to']._hash
-                    bools[1] = True
-                if relation_claim.rel_direction == 'self_to_to':
-                    bools[2] = True
-                if bools[0] and bools[1] and bools[2]:
-                    exists = True
-                    relation_claims.add(relation_claim)
-                    break
-
-            if not exists:
-                _relation:  structure.node_structs.RelationStruct = relations['self_to_to']
-                relation_claim = structure.node_structs.RelationClaimStruct(
-                    to_node=to_node,
-                    relation=_relation,
-                    rel_direction='self_to_to'
-                )
-                # relation_claim.__hash__()
-                relation_claims.add(relation_claim)
-
-        if rel_to_to_self != None:
-            exists = False  # TODO check if relation claim already exists in node_
-            for relation_claim in node_.relation_claims:
-                bools = [False, False, False]
-                if relation_claim.to_node == to_node:
-                    assert relation_claim.to_node._hash == to_node._hash
-                    bools[0] = True
-                if relation_claim.relation.relation_name == relations['to_to_self']:
-                    assert relation_claim.relation._hash == relations['to_to_self']._hash
-                    bools[1] = True
-                if relation_claim.rel_direction == 'to_to_self':
-                    bools[2] = True
-                if bools[0] and bools[1] and bools[2]:
-                    exists = True
-                    relation_claims.add(relation_claim)
-                    break
-
-            if not exists:
-                _relation:  structure.node_structs.RelationStruct = relations['to_to_self']
-                relation_claim = structure.node_structs.RelationClaimStruct(
-                    to_node=to_node,
-                    relation=_relation,
-                    rel_direction='to_to_self'
-                )
-                # relation_claim.__hash__()
-                relation_claims.add(relation_claim)
-        Debug_Tools.debug_msg(relation_claims)
-    else:
-        # use given relation
-        directions = set()
-        # 'self_to_to' if (rel_self_to_to==True or rel_to_to_self==False) else 'to_to_self'
-        if rel_self_to_to != None:
-            if rel_self_to_to == True:
-                directions.add('self_to_to')
-        if rel_to_to_self != None:
-            if rel_to_to_self == True:
-                directions.add('to_to_self')
-        for direction in directions:
-            relation_claim = structure.node_structs.RelationClaimStruct(
-                to_node=to_node,
-                relation=relation,
-                rel_direction=direction
-            )
-            relation_claims.add(relation_claim)
-        """relation_claim = structure.node_structs.RelationClaimStruct(
-            to_node=to_node,
-            relation=relation,
-            rel_direction='to_to_self'
-        )
-        relation_claims.add(relation_claim)"""
-        pass
+    relation_claim = structure.node_structs.RelationClaimStruct(
+        to_node=to_node,
+        relation=relation,
+        rel_direction=direction
+    )
+    relation_claims.add(relation_claim)
     return relation_claims
 
 
-def claim_relations(node_: structure.node_structs.NodeStruct,
-                    to_nodes: Set[structure.node_structs.NodeStruct],
-                    relation=None,
-                    rel_self_to_to: str = None,
-                    rel_to_to_self: str = None):
-    for to_node_ in to_nodes:
-        relation_claims = add_relation_claim(
-            node_, to_node_, relation, rel_self_to_to, rel_to_to_self)
-        node_.relation_claims.update(relation_claims)
+def claim_relation(node_: structure.node_structs.NodeStruct,
+                   to_node: structure.node_structs.NodeStruct,
+                   relation=None,
+                   direction=None,):
+    relation_claims = add_relation_claim(
+        node_, to_node, relation, direction)
+    node_.relation_claims.update(relation_claims)
 
 
 def accept_relations(node_: structure.node_structs.NodeStruct, node_s: Set[structure.node_structs.NodeStruct]):

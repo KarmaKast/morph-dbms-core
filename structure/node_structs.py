@@ -135,6 +135,7 @@ class RelationClaimStruct:
 
 @dataclass
 class NodeClusterStruct:
+    ID: str
     cluster_name: str
     nodes: Set[NodeStruct]
     relations: dict()

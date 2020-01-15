@@ -32,16 +32,21 @@ def write_cluster(node_cluster: structure.node_structs.NodeClusterStruct, path):
         
         #file.write("    {}\n    {}\n    {}\n".format(
         #    node_.node_ID.node_label, node_.data))
+        dir_str = ''
         for relation_claim in node_.relation_claims:
-            file.write("n@{} :r@{} -> n@{}\n".format(node_.node_ID.ID,
+            if relation_claim.rel_direction == 'from_self':
+                dir_str = '->'
+            elif relation_claim.rel_direction == 'to_self':
+                dir_str = '<-'
+            file.write("n@{} :r@{} {} n@{}\n".format(node_.node_ID.ID,
                                                    relation_claim.relation.ID, 
+                                                   dir_str,
                                                    relation_claim.to_node.node_ID.ID))
             pass
 
     with open(path, 'w') as file:
         # WRITE FILE
-        file.write("{}\n".format(node_cluster.cluster_name))
-        
+        file.write("c@%s '%s'\n" % (node_cluster.ID, node_cluster.cluster_name))
         # write all unique relations in the cluster
         for _,relation in node_cluster.relations.items():
             file.write("r@%s '%s'\n"%(relation.ID, relation.relation_name))
