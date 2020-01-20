@@ -137,5 +137,5 @@ class RelationClaimStruct:
 class NodeClusterStruct:
     ID: str
     cluster_name: str
-    nodes: Set[NodeStruct]
+    nodes: Dict[str, NodeStruct]
     relations: dict()
