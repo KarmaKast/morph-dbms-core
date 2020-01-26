@@ -134,3 +134,7 @@ class NodeClusterStruct:
     cluster_name: str
     nodes: Dict[str, NodeStruct]
     relations: dict()
+    
+    def __repr__(self):
+        repr_ = 'node cluster \'%s\' with ID : %s'%(self.cluster_name, self.ID)
+        return repr_
