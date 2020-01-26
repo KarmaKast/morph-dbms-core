@@ -19,7 +19,7 @@ def create_cluster(cluster_name=None,
     Returns:
         [type] -- [description]
     """
-    Debug_Tools.debug_msg('NodeCluster create_cluster started')
+    Debug_Tools.debug_msg('NodeCluster create_cluster started', False)
 
     nodeCluster_ = structure.node_structs.NodeClusterStruct(
         ID=ID if ID != None else str(uuid.uuid1()),
@@ -32,7 +32,8 @@ def create_cluster(cluster_name=None,
     if relations_ != None:
         nodeCluster_.relations.update(relations_)
 
-    Debug_Tools.debug_msg('NodeCluster create_cluster ended')
+    Debug_Tools.debug_msg('{} is created'.format(nodeCluster_), True)
+    Debug_Tools.debug_msg('NodeCluster create_cluster ended', False)
     return nodeCluster_
 
 
@@ -74,6 +75,7 @@ def generate_IDs(nodeCluster_: structure.node_structs.NodeClusterStruct):
 def describe(node_cluster: structure.node_structs.NodeClusterStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
     Debug_Tools.debug_msg('NodeCluster describe started', True)
     describer_('Cluster name: {} @{}'.format(node_cluster.cluster_name, node_cluster.ID))
+    describer_('Relations: %s'%(['\'%s\':\'%s\''%(value.ID, value.relation_name) for value in node_cluster.relations.values()]))
     for node_ in node_cluster.nodes.values():
         node.describe(
             node_=node_,

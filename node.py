@@ -55,14 +55,14 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
             for relation_claim in node_.relation_claims:
                 if rel_self_to_to == relation_claim.relation.relation_name:
                     exists = True
-                    relations['self_to_to'] = relation_claim.relation
+                    relations['from_self'] = relation_claim.relation
                     break
         if not exists:
             relation = structure.node_structs.RelationStruct(
                 ID = uuid.uuid1(),
                 relation_name=rel_self_to_to)
             relation.__hash__()
-            relations['self_to_to'] = relation
+            relations['from_self'] = relation
 
     if rel_to_to_self != None:
         exists = False
@@ -71,14 +71,14 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
             for relation_claim in node_.relation_claims:
                 if rel_to_to_self == relation_claim.relation.relation_name:
                     exists = True
-                    relations['to_to_self'] = relation_claim.relation
+                    relations['to_self'] = relation_claim.relation
                     break
         if not exists:
             relation = structure.node_structs.RelationStruct(
                 ID = uuid.uuid1(),
                 relation_name=rel_to_to_self)
             relation.__hash__()
-            relations['to_to_self'] = relation
+            relations['to_self'] = relation
 
     return relations
 
@@ -107,6 +107,7 @@ def claim_relation(node_: structure.node_structs.NodeStruct,
                    to_node: structure.node_structs.NodeStruct,
                    relation=None,
                    direction=None,):
+    # todo: if to_cluster is not given check if to_node belongs to this cluster 
     relation_claims = add_relation_claim(
         node_, to_node, relation, direction)
     node_.relation_claims.update(relation_claims)
