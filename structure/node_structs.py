@@ -40,11 +40,11 @@ class NodeStruct:
         """
         # return super().__hash__()
         if not hasattr(self, '_hash'):
-            #"""
+            # """
             hasher = hashlib.md5()
             hasher.update(str(id(self)).split(sep=' ')[-1][:-1].encode())
             hash_ = hasher.hexdigest()
-            #"""
+            # """
             #hash_ = str(uuid.uuid1())
             hash_ = int(hash_, base=16)
             self._hash = hash_
@@ -52,7 +52,7 @@ class NodeStruct:
 
     def __repr__(self):
         # return super().__repr__()
-        repr_ = 'node ({}) with hash {}'.format(self.node_ID, self._hash)
+        repr_ = 'node \'%s\' with ID : %s'%(self.node_ID.node_label, self.node_ID.ID)
         return repr_
 
 
@@ -85,10 +85,7 @@ class RelationStruct:
         return self._hash
 
     def __repr__(self):
-        repr_ = 'relation(name={}) with hash {}'.format(
-            self.relation_name,
-            self._hash,
-        )
+        repr_ = 'relation \'%s\' with ID : %s'%(self.relation_name, self.ID)
         return repr_
 
 
@@ -101,7 +98,7 @@ class RelationClaimStruct:
     to_node: NodeStruct
     # what is the first node to the second node
     relation: RelationStruct
-    rel_direction: str  
+    rel_direction: str
     # [to_to_from,from_to_to] / [ttf,ftt]
 
     def __hash__(self):
@@ -123,12 +120,10 @@ class RelationClaimStruct:
         return self._hash
 
     def __repr__(self):
-        repr_ = 'relation claim(to_node={}, relation={}, rel_direction={}) with hash{}'.format(
+        repr_ = 'relation claim(to_node={}, relation={}, rel_direction={})'.format(
             self.to_node,
             self.relation,
-            'ftt' if self.rel_direction == 'from_to_to' else (
-                'ttf' if self.rel_direction == 'to_to_from' else 'INVALID'),
-            self._hash
+            self.rel_direction
         )
         return repr_
 
