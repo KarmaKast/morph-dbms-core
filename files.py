@@ -15,8 +15,8 @@
 #import yaml
 import json
 import os
+import shutil
 from typing import Set
-import zipfile
 
 from . import structure, cluster, node, constants
 from .debug import Debug_Tools
@@ -24,221 +24,285 @@ from .debug import Debug_Tools
 
 def create_database(path: str, name: str):
     """
-    database is a zipfile
+    database is a folder
 
     Arguments:
         path {str} -- [description]
         name {str} -- [description]
     """
 
-    # todo: create a <database-name>.<database-file_extension> file
-    # doing: check if it already exists at <cwd>/data/
-    exists = False
-    database_file_name = name+'.'+constants.file_extensions['database']
-    for path_ in os.listdir(path):
-        if path_ == database_file_name and os.path.isdir(os.path.join(os.getcwd(), path)):
-            exists = True
-            break
+    # todo: create a folder <database-name> with a .<database-file-extension> file in it
 
-    if exists == False:
-        # doing: create the database file
-        database_file_path = os.path.join(path, database_file_name)
-        zipfile.ZipFile(database_file_path, mode='x')
-        """
-        # doing: creating empty folders 'clusters', 'nodes', 'relations'
-        with zipfile.ZipFile(database_file_path, 'a') as database:
-            empty_file_name = 'test.txt'
-            empty_file_path = os.path.join(path, empty_file_name)
-            with open(empty_file_path) as file:
-                file.write('')
-            database.write(empty_file_path, 'cluster/'+empty_file_name)
-            database.write(empty_file_path, 'nodes/'+empty_file_name)
-            database.write(empty_file_path, 'relations/'+empty_file_name)"""
+    if not os.path.exists(os.path.join(path, name)):
+        os.makedirs(os.path.join(path, name))
+        os.makedirs(os.path.join(path, name+'/clusters'))
+        os.makedirs(os.path.join(path, name+'/nodes'))
+        os.makedirs(os.path.join(path, name+'/relations'))
+        file_path = os.path.join(
+            path, name, '.'+constants.file_extensions['database'])
+        with open(file_path, 'w') as file:
+            # file is empty for now. could be used as a config file later
+            file.write('')
 
+
+def archive_database(path: str, name: str, mode, remove):
+    """[summary]
+
+    Arguments:
+        path {str} -- [description]
+        name {str} -- [description]
+        mode {[type]} -- 'pack','unpack'
+        remove {[type]} -- [description]
+    """
+    # check if the path is a node database
+    # remove any existing zip with that name and create a new one
+    if mode == 'pack':
+        if os.path.exists(os.path.join(path, name)):
+            archive_name = name+'.'+constants.file_extensions['database']
+            if archive_name in os.listdir():
+                # todo: delete the archive file
+                os.remove(os.path.join(path, archive_name))
+            """shutil.make_archive(
+                archive_name,
+                format='zip',
+                root_dir=path,
+                base_dir=os.path.join(path, name),
+            )"""
+            shutil.make_archive(
+                archive_name,
+                format='zip',
+                root_dir=path,
+                #base_dir=os.path.join(path, name),
+            )
+            shutil.move(os.path.join(os.getcwd(), archive_name +
+                                     '.zip'), os.path.join(path, archive_name))
+
+        if remove == True:
+            # todo: remove the database folder and its contents
+            shutil.rmtree(os.path.join(path, name))
+
+    elif mode == 'unpack':
+        archive_name = name+'.'+constants.file_extensions['database']
+        if archive_name in os.listdir(path):
+            shutil.unpack_archive(
+                os.path.join(path, archive_name), path, format='zip')
+        if remove == True:
+            os.remove(os.path.join(path, archive_name))
 
 #create_database(os.path.join(os.getcwd(), 'data'), 'test')
 
+
 def write_cluster(node_cluster: structure.node_structs.NodeClusterStruct, path, database_name):
-    # doing: create the database file if not already
-    create_database(path, database_name)
-    # todo: write the cluster and nodes in it
-    full_name = database_name+'.'+constants.file_extensions['database']
-    with zipfile.ZipFile(os.path.join(path, full_name), 'a') as database:
-        # doing: write cluster
-        cluster_file_name = node_cluster.ID + \
-            '.'+constants.file_extensions['cluster']
-        cluster_file_path = os.path.join(path, cluster_file_name)
-        with open(cluster_file_path, 'w') as cluster_file:
-            cluster_file.write(json.dumps(
+    # todo: check if database folder exists
+    if not os.path.exists(os.path.join(path, database_name)):
+        # todo: check if database archive exists
+        if os.path.exists(os.path.join(path, database_name+'.'+constants.file_extensions['database'])):
+            # unpack database
+            archive_database(path, database_name, mode='unpack', remove=False)
+        else:
+            # todo: create a new database wit <database-name>
+            create_database(path, database_name)
+
+    # todo: write cluster to database folder
+    database_path = os.path.join(path, database_name)
+    cluster_file_name = node_cluster.ID + '.' + \
+        constants.file_extensions['cluster']
+    cluster_file_path = os.path.join(
+        database_path, 'clusters', cluster_file_name)
+
+    # doing: step1: writing cluster decleration file
+    with open(cluster_file_path, 'w') as cluster_file_obj:
+        cluster_file_obj.write(json.dumps(
+            {
+                'ID': node_cluster.ID,
+                'name': node_cluster.cluster_name,
+                'nodes': list(node_cluster.nodes.keys()),
+                'relations': list(node_cluster.relations.keys())
+            }
+        ))
+
+    # todo: step2: write relation files for relations in the cluster
+    for relation_ in node_cluster.relations.values():
+        relation_file_name = relation_.ID + '.' + \
+            constants.file_extensions['relation']
+        relation_file_path = os.path.join(
+            database_path, 'relations', relation_file_name)
+        with open(relation_file_path, 'w') as relation_file_obj:
+            relation_file_obj.write(json.dumps(
                 {
-                    'ID': node_cluster.ID,
-                    'name': node_cluster.cluster_name,
-                    'nodes': list(node_cluster.nodes.keys()),
-                    'relations': list(node_cluster.relations.keys())
+                    'ID': relation_.ID,
+                    'name': relation_.relation_name
                 }
             ))
-        database.write(cluster_file_path, 'clusters/'+cluster_file_name)
-        os.remove(cluster_file_path)
-        # doing: write nodes in the cluster. each in a separate file
-        for node_ in node_cluster.nodes.values():
-            # doing: write node into a separate file, add it to zip and remove it
-            node_file_name = node_.node_ID.ID + '.' + \
-                constants.file_extensions['node']
-            node_file_path = os.path.join(path, node_file_name)
-            rel_claims = list()
-            for rel_claim in node_.relation_claims:
-                dir_str = ''
-                if rel_claim.rel_direction == 'from_self':
-                    dir_str = '->'
-                elif rel_claim.rel_direction == 'to_self':
-                    dir_str = '<-'
-                rel_claims.append(
-                    [rel_claim.relation.ID, dir_str, rel_claim.to_node.node_ID.ID])
 
-            with open(node_file_path, 'w') as node_file:
-                node_file.write(json.dumps(
-                    {
-                        'ID': node_.node_ID.ID,
-                        'node_label': node_.node_ID.node_label,
-                        'data': node_.data,
-                        'rel_claims': rel_claims
-                    }
-                ))
-            database.write(node_file_path, 'nodes/'+node_file_name)
-            os.remove(node_file_path)
-        # todo: write relations
-        for relation in node_cluster.relations.values():
-            relations_file_name = relation.ID + '.' + \
-                constants.file_extensions['relation']
-            relations_file_path = os.path.join(path, relations_file_name)
-            with open(relations_file_path, 'w') as rel_file:
+    # todo: step3: write node files for nodes in the cluster
+    for node_ in node_cluster.nodes.values():
+        node_file_name = node_.node_ID.ID + '.' + \
+            constants.file_extensions['node']
+        node_file_path = os.path.join(
+            database_path, 'nodes', node_file_name)
 
-                rel_file.write(json.dumps(
-                    {
-                        'ID': relation.ID,
-                        'name': relation.relation_name
-                    }
-                ))
-            database.write(relations_file_path,
-                           'relations/'+relations_file_name)
-            os.remove(relations_file_path)
+        rel_claims = list()
+        for rel_claim in node_.relation_claims:
+            dir_str = ''
+            if rel_claim.rel_direction == 'from_self':
+                dir_str = '->'
+            elif rel_claim.rel_direction == 'to_self':
+                dir_str = '<-'
+            rel_claims.append(
+                [rel_claim.relation.ID, dir_str, rel_claim.to_node.node_ID.ID])
+        with open(node_file_path, 'w') as node_file_obj:
+            node_file_obj.write(json.dumps(
+                {
+                    'ID': node_.node_ID.ID,
+                    'node_label': node_.node_ID.node_label,
+                    'data': node_.data,
+                    'rel_claims': rel_claims
+                }
+            ))
 
-        
-def load_cluster(path, cluster_name=None, ID=None):
-    """ 
-    path : database path
-    If ID is given use it
-    If name is given use it. If multiple clusters have same name print all the ID and return None
+
+def load_cluster(path: str, database_name: str, cluster_name: str, ID: str = None, mode='limited'):
+    """[summary]
+    todo: implement mode
+    Arguments:
+        path {str} -- [description]
+        database_name {str} -- [description]
+        cluster_name {str} -- [description]
+
+    Keyword Arguments:
+        Id {str} -- [description] (default: {None})
+        mode {str} -- 'limited1' for loading only things that the cluster owns. 
+                        'limited2' for loading only things that the database has
+                        'full' loads what ever can be loaded (default: 
+                        {'limited'})
     """
+    # check if database path exists
+    database_path = os.path.join(path, database_name)
+    assert os.path.exists(database_path)
+
     cluster_ = None
-    nodes = dict()
-    relations = dict()
-    
-    # note: file names not files
-    all_clusters = []
-    all_nodes = []
-    all_relations = []
-    
-    
-    
-    with zipfile.ZipFile(path, 'r') as database:
-        
-        for name in database.namelist():
-            if 'clusters/' in name:
-                all_clusters.append(name.split('clusters/')[1].split('.'+constants.file_extensions['cluster'])[0])
-                # clusters.append(name)
-            elif 'nodes/' in name:
-                all_nodes.append(name.split('nodes/')[1].split('.'+constants.file_extensions['node'])[0])
-            elif 'relations/' in name:
-                all_relations.append(name.split('relations/')[1].split('.'+constants.file_extensions['relation'])[0])
-        # print(cluster_files)
-        cluster_ID = None
-        if ID == None:
-            # todo: get
-            for cluster_ID_ in all_clusters:
-                with database.open('clusters/'+cluster_ID_+'.'+constants.file_extensions['cluster'], mode='r') as cluster_file:
-                    cluster_file_data = json.loads(cluster_file.readline())
-                    if cluster_file_data['name'] == cluster_name:
-                        cluster_ID = cluster_ID_
-                        break
-        else:
-            cluster_ID = ID
-        
-        cluster_file_data = None
-        with database.open('clusters/'+cluster_ID+'.'+constants.file_extensions['cluster'], mode='r') as cluster_file:
-            cluster_file_data = json.loads(cluster_file.readline())
-        # print(cluster_file_data)
+    """
+    If ID is given ignore name.
+    else: get ID using name.
+    """
+    cluster_ID = None
+    if ID != None:
+        cluster_ID = ID
+    else:
+        """
+        get list of cluster files under database/clusters/
+        search for clusters using name
+        get cluster ID
+        """
+        # clusters_: clusters with name <name>
+        cluster_IDs = []
+        for cluster_file_name in os.listdir(os.path.join(database_path, 'clusters')):
+            # there shouldn't be any folders inside database/clusters/ for now
+            cluster_file_path = os.path.join(
+                database_path, 'clusters', cluster_file_name)
+            assert os.path.isfile(cluster_file_path)
+            with open(cluster_file_path, 'r') as cluster_file_obj:
+                cluster_file_data = json.loads(cluster_file_obj.readline())
+                if cluster_file_data['name'] == cluster_name:
+                    cluster_IDs.append(cluster_file_data['ID'])
+
+        # note: for now Im not dealing with multiple clusters with same name
+        try:
+            assert not len(cluster_IDs) > 1
+        except AssertionError as error:
+            Debug_Tools.debug_msg(
+                'There are multiple clusters with same name: %s' % (cluster_IDs))
+            raise
+
+        cluster_ID = cluster_IDs[0]
+
+    cluster_file_path = os.path.join(
+        database_path, 'clusters', cluster_ID+'.'+constants.file_extensions['cluster'])
+    with open(cluster_file_path, 'r') as cluster_file_obj:
+        cluster_file_data = json.loads(cluster_file_obj.readline())
         cluster_ = cluster.create_cluster(
             cluster_file_data['name'], cluster_file_data['ID'])
-        # todo: load relations belonging to this cluster and add them to this cluster
+
+        # todo: load relations
         for relation_ID in cluster_file_data['relations']:
-            # doing: search relation_ID in the database
-            exist_in_database =  True if relation_ID in all_relations else False
-            # doing: create relation obj from data in relation file and add it to cluster obj
-            if exist_in_database == True:
-                with database.open('relations/'+relation_ID+'.'+constants.file_extensions['relation'], 'r') as rel_file:
-                    rel_file_data = json.loads(rel_file.readline())
-                    # note
-                    relation_ = cluster.create_relation(
-                        cluster_, rel_file_data['name'], rel_file_data['ID'])
-                    relations.update({relation_.ID: relation_})
-                    #print('cluster %s RELATIONS %s'%(cluster_.cluster_name, relations.values()))
-            else:
-                print('relation with ID %s does not exist in database' %
-                      (relation_ID))
-                
-        # todo: load nodes and add them to this cluster
-        for node_ID in cluster_file_data['nodes']:
-            # doing: search node_ID in the database
-            exist_in_database = True if node_ID in all_nodes else False
-            if exist_in_database == True:
-                with database.open('nodes/'+node_ID+'.'+constants.file_extensions['node'], 'r') as node_file:
-                    node_file_data = json.loads(node_file.readline())
-                    # note
-                    node_ = node.create_node(
-                        {'ID': node_file_data['ID'], 'node_label': node_file_data['node_label']}, data=node_file_data['data'])
-                    # todo: add relation cliams
-                    # node.claim_relation
-                    cluster_.nodes[node_.node_ID.ID] = node_
-                    nodes[node_.node_ID.ID] = node_
-            else:
-                print('node with ID %s does not exist in database' % (node_ID))
+            # doing: assuming relation exists in this database
+            # load relation with this ID from database
+            relation_file_name = relation_ID+'.' + \
+                constants.file_extensions['relation']
+            relation_file_path = os.path.join(
+                database_path, 'relations', relation_file_name)
+            with open(relation_file_path, 'r') as relation_file_obj:
+                relation_file_data = json.loads(relation_file_obj.readline())
+                cluster.create_relation(
+                    cluster_, relation_file_data['name'], relation_file_data['ID'])
 
+        # todo: load nodes
+        # doing: pass 1 load all nodes without relation claims
         for node_ID in cluster_file_data['nodes']:
-            # doing: search node_ID in the database
-            exist_in_database = True if node_ID in all_nodes else False
-            if exist_in_database == True:
-                with database.open('nodes/'+node_ID+'.'+constants.file_extensions['node'], 'r') as node_file:
-                    node_file_data = json.loads(node_file.readline())
-                    # note: each rel_claim has a relation_ID, direction, to_node_ID
-                    rel_claims_data = node_file_data['rel_claims']
-                    # note
-                    #node_ = node.create_node({'ID':node_file_data['ID'],'node_label':node_file_data['node_label']},data=node_file_data['data'])
-                    # node.claim_relation
-                    print(node_file_data['rel_claims'])
-                    # todo: get relation_ID
-                    for rel_claim_data in node_file_data['rel_claims']:
-                        relation_ID = rel_claim_data[0]
-                        to_node_ID = rel_claim_data[2]
-                        #print('cluster %s RELATIONS %s'%(cluster_.cluster_name, relations.values()))
-                        # note: the relation_ID might not belong to this cluster and if so has not been loaded yet
-                        if relation_ID not in cluster_file_data['relations']:
-                            # relation_ID does not exist in this cluster
-                            continue
-                        if to_node_ID not in cluster_file_data['nodes']:
-                            continue
-                        
-                        relation_ = relations[relation_ID]
-                        print(relation_)
-                        direction = 'from_self' if rel_claim_data[1] == '->' else '<-'
-                        to_node_ = nodes[to_node_ID]
-                        print(to_node_)
-                        curr_node_ = nodes[node_ID]
-                        print(curr_node_)
-                        node.claim_relation(curr_node_,to_node_,relation_,direction)
+            # doing: assuming node exists in this database
+            node_file_name = node_ID+'.'+constants.file_extensions['node']
+            node_file_path = os.path.join(
+                database_path, 'nodes', node_file_name)
+            with open(node_file_path, 'r') as node_file_obj:
+                node_file_data = json.loads(node_file_obj.readline())
+                node_ = node.create_node(
+                    {'ID': node_file_data['ID'],
+                        'node_label': node_file_data['node_label']},
+                    data=node_file_data['data']
+                )
+                cluster_.nodes[node_.node_ID.ID] = node_
+        # doing: pass 2 load relation claims for all nodes
+        for node_ID in cluster_file_data['nodes']:
+            node_file_name = node_ID+'.'+constants.file_extensions['node']
+            node_file_path = os.path.join(
+                database_path, 'nodes', node_file_name)
+            with open(node_file_path, 'r') as node_file_obj:
+                node_file_data = json.loads(node_file_obj.readline())
+                for rel_claim_data in node_file_data['rel_claims']:
+                    
+                    # doing: get relation
+                    relation = None
+                    if rel_claim_data[0] in cluster_.relations.keys():
+                        relation = cluster_.relations[rel_claim_data[0]]
+                    else:
+                        # doing: assuming relation exists in this database
+                        relation_file_name = rel_claim_data[0] + \
+                            '.' + constants.file_extensions['relation']
+                        relation_file_path = os.path.join(
+                            database_path, 'relations', relation_file_name)
+                        with open(relation_file_path, 'r') as relation_file_obj:
+                            relation_file_data = json.loads(
+                                relation_file_obj.readline())
+                            relation = structure.node_structs.RelationStruct(
+                                ID=relation_file_data['ID'], relation_name=relation_file_data['name'])
+                            relation.__hash__()
 
-                    # cluster_.nodes[node_.node_ID.ID].relation_claims
-            else:
-                print('node with ID %s does not exist in database' % (node_ID))
+                    # doing: parse direction
+                    direction = 'from_self' if rel_claim_data[1] == '->' else 'to_self'
+                    
+                    # doing: get to_node
+                    to_node = None
+                    if rel_claim_data[2] in cluster_.nodes.keys():
+                        to_node = cluster_.nodes[rel_claim_data[2]]
+                    else:
+                        # doing: assuming to_node exists in this database
+                        to_node_file_name = rel_claim_data[2] + \
+                            '.'+constants.file_extensions['node']
+                        to_node_file_path = os.path.join(
+                            database_path, 'nodes', to_node_file_name)
+                        with open(to_node_file_path, 'r') as to_node_file_obj:
+                            to_node_file_data = json.loads(
+                                to_node_file_obj.readline())
+                            to_node = node.create_node(
+                                {'ID': to_node_file_data['ID'],
+                                 'node_label': to_node_file_data['node_label']},
+                                data=to_node_file_data['data']
+                            )
+
+                    node.claim_relation(
+                        cluster_.nodes[node_ID], to_node, relation, direction)
+
+    # todo: cluster_ = cluster.create_cluster(cluster_name, cluster_ID)
 
     return cluster_
