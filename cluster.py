@@ -36,6 +36,9 @@ def create_cluster(cluster_name=None,
     Debug_Tools.debug_msg('NodeCluster create_cluster ended', False)
     return nodeCluster_
 
+def clear_cluster(nodeCluster_: structure.node_structs.NodeClusterStruct):
+    nodeCluster_.nodes=dict()
+    nodeCluster_.relations=dict()
 
 def create_relation(nodeCluster_: structure.node_structs.NodeClusterStruct,
                     relation=None,
