@@ -92,7 +92,7 @@ def archive_database(path: str, name: str, mode, remove):
 #create_database(os.path.join(os.getcwd(), 'data'), 'test')
 
 
-def write_cluster(node_cluster: structure.node_structs.NodeClusterStruct, path, database_name):
+def write_cluster(node_cluster: structure.NodeClusterStruct, path, database_name):
     # todo: check if database folder exists
     if not os.path.exists(os.path.join(path, database_name)):
         # todo: check if database archive exists
@@ -274,7 +274,7 @@ def load_cluster(path: str, database_name: str, cluster_name: str, ID: str = Non
                         with open(relation_file_path, 'r') as relation_file_obj:
                             relation_file_data = json.loads(
                                 relation_file_obj.readline())
-                            relation = structure.node_structs.RelationStruct(
+                            relation = structure.RelationStruct(
                                 ID=relation_file_data['ID'], relation_name=relation_file_data['name'])
                             relation.__hash__()
 

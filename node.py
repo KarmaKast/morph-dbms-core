@@ -20,15 +20,15 @@ from . import structure
 from .debug import Debug_Tools
 
 
-def create_node(node_ID: dict, data=None, relation_claims: Set[structure.node_structs.RelationClaimStruct] = None):
+def create_node(node_ID: dict, data=None, relation_claims: Set[structure.RelationClaimStruct] = None):
     """[kwargs]
     node_ID
     data
     relation_claims
     """
     _ID = node_ID['ID'] if 'ID' in node_ID.keys() else str(uuid.uuid1())
-    node_ = structure.node_structs.NodeStruct(
-        node_ID=structure.node_structs.NodeIdStruct(
+    node_ = structure.NodeStruct(
+        node_ID=structure.NodeIdStruct(
             ID=_ID,
             node_label=node_ID['node_label'] if 'node_label' in node_ID.keys() else None),
         data=data if data != None else dict(),
@@ -42,11 +42,11 @@ def create_node(node_ID: dict, data=None, relation_claims: Set[structure.node_st
     return node_
 
 
-def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
+def add_relation(check_nodes: Set[structure.NodeStruct],
                  rel_self_to_to: str = None,
                  rel_to_to_self: str = None):
 
-    relations:  Dict[structure.node_structs.RelationStruct] = dict()
+    relations:  Dict[structure.RelationStruct] = dict()
 
     if rel_self_to_to != None:
         exists = False
@@ -58,7 +58,7 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
                     relations['from_self'] = relation_claim.relation
                     break
         if not exists:
-            relation = structure.node_structs.RelationStruct(
+            relation = structure.RelationStruct(
                 ID = uuid.uuid1(),
                 relation_name=rel_self_to_to)
             relation.__hash__()
@@ -74,7 +74,7 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
                     relations['to_self'] = relation_claim.relation
                     break
         if not exists:
-            relation = structure.node_structs.RelationStruct(
+            relation = structure.RelationStruct(
                 ID = uuid.uuid1(),
                 relation_name=rel_to_to_self)
             relation.__hash__()
@@ -83,18 +83,18 @@ def add_relation(check_nodes: Set[structure.node_structs.NodeStruct],
     return relations
 
 
-def add_relation_claim(node_: structure.node_structs.NodeStruct,
-                       to_node: structure.node_structs.NodeStruct,
-                       relation: structure.node_structs.RelationStruct = None,
+def add_relation_claim(node_: structure.NodeStruct,
+                       to_node: structure.NodeStruct,
+                       relation: structure.RelationStruct = None,
                        direction: str = None):
 
     # check if node_ and to_node_ is same
     if node_._hash == to_node._hash:
         Debug_Tools.debug_msg('node and to_node same. How?')
 
-    relation_claims: Set[structure.node_structs.RelationStruct] = set()
+    relation_claims: Set[structure.RelationStruct] = set()
 
-    relation_claim = structure.node_structs.RelationClaimStruct(
+    relation_claim = structure.RelationClaimStruct(
         to_node=to_node,
         relation=relation,
         rel_direction=direction
@@ -103,8 +103,8 @@ def add_relation_claim(node_: structure.node_structs.NodeStruct,
     return relation_claims
 
 
-def claim_relation(node_: structure.node_structs.NodeStruct,
-                   to_node: structure.node_structs.NodeStruct,
+def claim_relation(node_: structure.NodeStruct,
+                   to_node: structure.NodeStruct,
                    relation=None,
                    direction=None,):
     # todo: if to_cluster is not given check if to_node belongs to this cluster 
@@ -113,11 +113,11 @@ def claim_relation(node_: structure.node_structs.NodeStruct,
     node_.relation_claims.update(relation_claims)
 
 
-def accept_relations(node_: structure.node_structs.NodeStruct, node_s: Set[structure.node_structs.NodeStruct]):
+def accept_relations(node_: structure.NodeStruct, node_s: Set[structure.NodeStruct]):
     """ if nodes from node_s has relation claims towards node_ , create counter claims in to_node_
         Arguments:
-            to_node_ {structure.node_structs.NodeStruct} -- [description]
-            node_s {List[structure.node_structs.NodeStruct]} -- [description]
+            to_node_ {structure.NodeStruct} -- [description]
+            node_s {List[structure.NodeStruct]} -- [description]
     """
     Debug_Tools.debug_msg('Node accept_relations started')
     for node_ in node_s:
@@ -136,8 +136,8 @@ def accept_relations(node_: structure.node_structs.NodeStruct, node_s: Set[struc
     Debug_Tools.debug_msg('Node accept_relations ended')
 
 
-def create_related_node(node_: structure.node_structs.NodeStruct,
-                        to_node_ID: structure.node_structs.NodeIdStruct = None,
+def create_related_node(node_: structure.NodeStruct,
+                        to_node_ID: structure.NodeIdStruct = None,
                         data: dict = None,
                         relations_self_to_to: str = None,
                         relations_to_to_self: str = None):
@@ -171,18 +171,18 @@ def create_related_node(node_: structure.node_structs.NodeStruct,
 
 
 def get_rel_node(
-        node_: structure.node_structs.NodeStruct,
+        node_: structure.NodeStruct,
         hash_deep: List[int] = None,
-        nodeID_deep: List[structure.node_structs.NodeIdStruct] = None,
+        nodeID_deep: List[structure.NodeIdStruct] = None,
         data_deep: List[dict] = None):
     """[summary]
 
         Arguments:
-            node_ {structure.node_structs.NodeStruct} -- [description]
+            node_ {structure.NodeStruct} -- [description]
 
         Keyword Arguments:
             hash_deep {List[int]} -- [description] (default: {None})
-            nodeID_deep {List[structure.node_structs.NodeIdStruct]} -- [description] (default: {None})
+            nodeID_deep {List[structure.NodeIdStruct]} -- [description] (default: {None})
             data_deep {List[dict]} -- [description] (default: {None})
 
         Returns:
@@ -190,18 +190,18 @@ def get_rel_node(
     """
     # TODO deal with wrong inputs
     def _get_rel_node(
-            node_: structure.node_structs.NodeStruct,
+            node_: structure.NodeStruct,
             hash_shallow: int = None,
-            nodeID_shallow: structure.node_structs.NodeIdStruct = None,
+            nodeID_shallow: structure.NodeIdStruct = None,
             data_shallow: dict = None):
         """[summary]
 
             Arguments:
-                node_ {structure.node_structs.NodeStruct} -- [description]
+                node_ {structure.NodeStruct} -- [description]
 
             Keyword Arguments:
                 hash_shallow {int} -- [description] (default: {None})
-                nodeID_shallow {structure.node_structs.NodeIdStruct} -- [description] (default: {None})
+                nodeID_shallow {structure.NodeIdStruct} -- [description] (default: {None})
                 data_shallow {dict} -- [description] (default: {None})
 
             Returns:
@@ -252,10 +252,10 @@ def get_rel_node(
 def get_rel_nodes(
         node_,
         hash_deep_list: List[List[int]] = None,
-        nodeID_deep_list: List[List[structure.node_structs.NodeIdStruct]] = None,
+        nodeID_deep_list: List[List[structure.NodeIdStruct]] = None,
         data_deep_list: List[List[dict]] = None):
 
-    _nodes: List[structure.node_structs.NodeStruct] = []
+    _nodes: List[structure.NodeStruct] = []
     if hash_deep_list != None:
         for hash_deep in hash_deep_list:
             _nodes.append(get_rel_node(
@@ -272,7 +272,7 @@ def get_rel_nodes(
     return _nodes
 
 
-def describe(node_: structure.node_structs.NodeStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
+def describe(node_: structure.NodeStruct, to_node_data_keys: list = None, mode: str = None, describer_=print, describer_args: list = None):
     # describe self.node_data
     def describer(msg=''):
         if describer_args == None:
@@ -320,6 +320,6 @@ def describe(node_: structure.node_structs.NodeStruct, to_node_data_keys: list =
                 relation_claim.relation.relation_name, relation_claim.rel_direction))
 
 
-def delete_node(node_: structure.node_structs.NodeStruct, mode=None):
+def delete_node(node_: structure.NodeStruct, mode=None):
     # objects cannot be directly deleted in python. If nothing is referencing the object its deleted
     return None
