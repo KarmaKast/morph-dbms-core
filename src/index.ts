@@ -1,1 +1,2 @@
-export * as entity from "./entity";
+export * as Entity from "./entity";
+export { Direction } from "./structs";

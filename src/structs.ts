@@ -17,6 +17,15 @@ export interface RelationClaim {
 export interface Entity {
   ID: string;
   Label: string | null;
-  RelationClaims: Array<RelationClaim>;
+  RelationClaims: Set<RelationClaim>;
   Data?: object;
+}
+
+export interface Collection {
+  ID: string;
+  Label: string | null;
+  Entities: {
+    [key: string]: Entity;
+  };
+  Relations: Array<Relation>;
 }
