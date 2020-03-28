@@ -8,26 +8,63 @@ import * as Structs from "./structs";
 
 // find entity with label
 
-export class QueryCollection {
-  Collection: Structs.Collection;
-  constructor(Collection: Structs.Collection) {
-    this.Collection = Collection;
+export class QueryEntity {
+  entity: Structs.Entity;
+  constructor(entity: Structs.Entity) {
+    this.entity = entity;
   }
-  hasLabel(Label: Structs.Entity["Label"]): QueryCollection {
+  hasRelationClaim(
+    relation: Structs.Relation,
+    direction: Structs.Direction
+  ): boolean {
+    for (const relClaim of this.entity.RelationClaims) {
+      if (relation === relClaim.Relation && direction === relClaim.Direction) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
+}
+
+export class QueryCollection {
+  collection: Structs.Collection;
+  constructor(collection: Structs.Collection) {
+    this.collection = collection;
+  }
+  hasLabel(label: Structs.Entity["Label"]): QueryCollection {
     const newCollection: Structs.Collection = Collection.createNew(
-      this.Collection.Label,
+      this.collection.Label,
       undefined,
       undefined,
-      this.Collection.ID
+      this.collection.ID
     );
-    for (const entity of Object.values(this.Collection.Entities)) {
-      if (entity.Label === Label) {
+    for (const entity of Object.values(this.collection.Entities)) {
+      if (entity.Label === label) {
         newCollection.Entities[entity.ID] = entity;
-        Entity.getUniqueRelations(entity, this.Collection.Relations).forEach(
+        Entity.getUniqueRelations(entity, this.collection.Relations).forEach(
           (relation) => {
             newCollection.Relations.add(relation);
           }
         );
+      }
+    }
+    return new QueryCollection(newCollection);
+  }
+  hasRelationClaim(
+    relation: Structs.Relation,
+    direction: Structs.Direction
+  ): QueryCollection {
+    const newCollection: Structs.Collection = Collection.createNew(
+      this.collection.Label,
+      undefined,
+      undefined,
+      this.collection.ID
+    );
+    for (const entity of Object.values(this.collection.Entities)) {
+      if (new QueryEntity(entity).hasRelationClaim(relation, direction)) {
+        this.collection.Entities[entity.ID] = entity;
       }
     }
     return new QueryCollection(newCollection);

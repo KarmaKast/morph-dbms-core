@@ -45,3 +45,7 @@ export function getUniqueRelations(
   }
   return relations;
 }
+
+export function describe(entity: Structs.Entity): void {
+  console.log(entity);
+}

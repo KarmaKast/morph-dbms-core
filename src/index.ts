@@ -1,6 +1,7 @@
 export * as Entity from "./entity";
 export * as Collection from "./collection";
 export * as Query from "./query";
+export * as Structs from "./structs";
 export { Direction } from "./structs";
 
 import { v1 } from "uuid";

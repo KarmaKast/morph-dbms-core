@@ -46,3 +46,16 @@ export function drop(
 ): void {
   delete collection.Entities[entity.ID];
 }
+
+export function describe(collection: Structs.Collection): void {
+  console.log("--------------------------Collection--------------------------");
+  console.log("ID : ", collection.ID);
+  console.log("Label : ", collection.Label);
+  console.log("Entities : {");
+  for (const entityID in collection.Entities) {
+    Entity.describe(collection.Entities[entityID]);
+  }
+  console.log("}");
+  console.log(collection.Relations);
+  console.log("--------------------------------------------------------------");
+}
