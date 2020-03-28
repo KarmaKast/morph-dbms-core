@@ -27,5 +27,5 @@ export interface Collection {
   Entities: {
     [key: string]: Entity;
   };
-  Relations: Array<Relation>;
+  Relations: Set<Relation>;
 }

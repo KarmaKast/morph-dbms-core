@@ -37,10 +37,10 @@ export function getUniqueRelations(
   entity: Structs.Entity,
   knownRelations: Structs.Collection["Relations"]
 ): Structs.Collection["Relations"] {
-  const relations: Structs.Collection["Relations"] = [];
+  const relations: Structs.Collection["Relations"] = new Set();
   for (const relationClaim of entity.RelationClaims.values()) {
-    if (!knownRelations.includes(relationClaim.Relation)) {
-      relations.push(relationClaim.Relation);
+    if (!knownRelations.has(relationClaim.Relation)) {
+      relations.add(relationClaim.Relation);
     }
   }
   return relations;

@@ -24,8 +24,10 @@ export class Query {
       console.log(entity);
       if (entity.Label === Label) {
         newCollection.Entities[entity.ID] = entity;
-        newCollection.Relations.push(
-          ...Entity.getUniqueRelations(entity, this.Collection.Relations)
+        Entity.getUniqueRelations(entity, this.Collection.Relations).forEach(
+          (relation) => {
+            newCollection.Relations.add(relation);
+          }
         );
       }
     }
