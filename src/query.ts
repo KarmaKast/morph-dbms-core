@@ -8,12 +8,12 @@ import * as Structs from "./structs";
 
 // find entity with label
 
-export class Query {
+export class QueryCollection {
   Collection: Structs.Collection;
   constructor(Collection: Structs.Collection) {
     this.Collection = Collection;
   }
-  hasLabel(Label: Structs.Entity["Label"]): Query {
+  hasLabel(Label: Structs.Entity["Label"]): QueryCollection {
     const newCollection: Structs.Collection = Collection.createNew(
       this.Collection.Label,
       undefined,
@@ -21,7 +21,6 @@ export class Query {
       this.Collection.ID
     );
     for (const entity of Object.values(this.Collection.Entities)) {
-      console.log(entity);
       if (entity.Label === Label) {
         newCollection.Entities[entity.ID] = entity;
         Entity.getUniqueRelations(entity, this.Collection.Relations).forEach(
@@ -31,6 +30,6 @@ export class Query {
         );
       }
     }
-    return new Query(newCollection);
+    return new QueryCollection(newCollection);
   }
 }
