@@ -2,7 +2,7 @@ import { v1 } from "uuid";
 
 import * as Structs from "./structs";
 
-export function createEntity(
+export function createNew(
   ID?: Structs.Entity["ID"],
   Label?: Structs.Entity["Label"],
   RelationClaims?: Structs.Entity["RelationClaims"],
@@ -17,17 +17,6 @@ export function createEntity(
     entity.Data = Data;
   }
   return entity;
-}
-
-export function createRelation(
-  Label: Structs.Relation["Label"],
-  ID?: Structs.Relation["ID"]
-): Structs.Relation {
-  const relation: Structs.Relation = {
-    ID: ID === undefined ? v1() : ID,
-    Label: Label,
-  };
-  return relation;
 }
 
 export function claimRelation(
@@ -49,8 +38,7 @@ export function getUniqueRelations(
   knownRelations: Structs.Collection["Relations"]
 ): Structs.Collection["Relations"] {
   const relations: Structs.Collection["Relations"] = [];
-
-  for (const relationClaim of entity.RelationClaims) {
+  for (const relationClaim of entity.RelationClaims.values()) {
     if (!knownRelations.includes(relationClaim.Relation)) {
       relations.push(relationClaim.Relation);
     }
