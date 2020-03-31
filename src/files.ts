@@ -2,7 +2,7 @@ import * as Structs from "./structs";
 import * as fs from "fs";
 import * as path from "path";
 
-export async function initDatabase(
+export function initDatabase(
   dataBasePath: string,
   mode: "init" | "reset" = "init"
 ): Promise<void> {
@@ -19,7 +19,7 @@ export async function initDatabase(
         fs.rmdirSync(dataBasePath, { recursive: true });
       }
       init();
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         console.log("reset done");
         resolve();
       });
@@ -32,35 +32,79 @@ export async function initDatabase(
       }
       break;
   }
+  return new Promise((resolve, reject) => {
+    reject("idk");
+  });
 }
 
 export function writeEntity(
   entity: Structs.Entity,
   dataBasePath: string
 ): void {
-  fs.writeFileSync(
-    path.resolve(path.join(dataBasePath, "Entities", entity.ID + ".entity")),
+  fs.writeFile(
+    path.resolve(
+      path.join(dataBasePath, "Entities", entity.ID + ".entity.json")
+    ),
     JSON.stringify(entity),
-    { flag: "w+" }
+    { flag: "w+" },
+    () => {
+      //
+    }
   );
+}
+
+export function writeRelation(
+  relation: Structs.Relation,
+  dataBasePath: string
+): void {
+  fs.writeFile(
+    path.resolve(
+      path.join(dataBasePath, "Relations", relation.ID + ".relation.json")
+    ),
+    JSON.stringify(relation),
+    { flag: "w+" },
+    () => {
+      //
+    }
+  );
+}
+
+function mapCollectionToFile(
+  collection: Structs.Collection
+): Structs.CollectionFile {
+  const res: Structs.CollectionFile = {
+    ID: collection.ID,
+    Label: collection.Label,
+    Entities: Object.keys(collection.Entities).map((key) => {
+      return collection.Entities[key].ID;
+    }),
+    Relations: Array.from(collection.Relations.values()).map((relation) => {
+      return relation.ID;
+    }),
+  };
+  //console.log(res);
+  return res;
 }
 
 export function writeCollection(
   collection: Structs.Collection,
   dataBasePath: string
 ): void {
-  for (const entityID in collection.Entities) {
-    writeEntity(collection.Entities[entityID], dataBasePath);
-  }
   fs.writeFile(
     path.resolve(
-      path.join(dataBasePath, "Collections", collection.ID + ".collection")
+      path.join(dataBasePath, "Collections", collection.ID + ".collection.json")
     ),
-    JSON.stringify(collection),
+    JSON.stringify(mapCollectionToFile(collection)),
     { flag: "w+" },
     (err) => {
       if (err) throw err;
       console.log("The file has been saved!");
     }
   );
+  for (const entityID in collection.Entities) {
+    writeEntity(collection.Entities[entityID], dataBasePath);
+  }
+  for (const relation of collection.Relations) {
+    writeRelation(relation, dataBasePath);
+  }
 }

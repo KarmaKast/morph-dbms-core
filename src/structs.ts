@@ -29,3 +29,10 @@ export interface Collection {
   };
   Relations: Set<Relation>;
 }
+
+export interface CollectionFile {
+  ID: Collection["ID"];
+  Label: Collection["Label"];
+  Entities: Array<Entity["ID"]>;
+  Relations: Array<Relation["ID"]>;
+}
