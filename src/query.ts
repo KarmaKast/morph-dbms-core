@@ -43,11 +43,11 @@ export class QueryCollection {
     for (const entity of Object.values(this.collection.Entities)) {
       if (entity.Label === label) {
         newCollection.Entities[entity.ID] = entity;
-        Entity.getUniqueRelations(entity, this.collection.Relations).forEach(
-          (relation) => {
-            newCollection.Relations.add(relation);
-          }
-        );
+        Object.values(
+          Entity.getUniqueRelations(entity, this.collection.Relations)
+        ).forEach((relation) => {
+          newCollection.Relations[relation.ID] = relation;
+        });
       }
     }
     return new QueryCollection(newCollection);

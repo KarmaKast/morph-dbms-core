@@ -7,15 +7,13 @@ export function updateRelations(
   collection: Structs.Collection
 ): Structs.Collection["Relations"] {
   const oldRelations = collection.Relations;
-  collection.Relations = new Set();
+  collection.Relations = {};
   for (const entityID in collection.Entities) {
     const uniqueRelations = Entity.getUniqueRelations(
       collection.Entities[entityID],
       collection.Relations
     );
-    uniqueRelations.forEach((relation) => {
-      collection.Relations.add(relation);
-    });
+    Object.assign(collection.Relations, uniqueRelations);
   }
   return oldRelations;
 }
@@ -30,7 +28,7 @@ export function createNew(
     ID: ID === undefined ? v1() : ID,
     Label: Label,
     Entities: Entities === undefined ? {} : Entities,
-    Relations: Relations === undefined ? new Set() : Relations,
+    Relations: Relations === undefined ? {} : Relations,
   };
 
   if (Relations === undefined) {

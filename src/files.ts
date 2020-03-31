@@ -37,6 +37,27 @@ export function initDatabase(
   });
 }
 
+function mapEntityToFile(entity: Structs.Entity): Structs.EntityFile {
+  const res: Structs.EntityFile = {
+    ID: entity.ID,
+    Label: entity.Label,
+    RelationClaims: Array.from(entity.RelationClaims.values()).map(
+      (RelationClaim) => {
+        return {
+          To: RelationClaim.To.ID,
+          Direction: RelationClaim.Direction,
+          Relation: RelationClaim.Relation.ID,
+        };
+      }
+    ),
+  };
+  if (entity.Data !== undefined) {
+    res.Data = entity.Data;
+  }
+  //console.log(res);
+  return res;
+}
+
 export function writeEntity(
   entity: Structs.Entity,
   dataBasePath: string
@@ -45,7 +66,7 @@ export function writeEntity(
     path.resolve(
       path.join(dataBasePath, "Entities", entity.ID + ".entity.json")
     ),
-    JSON.stringify(entity),
+    JSON.stringify(mapEntityToFile(entity)),
     { flag: "w+" },
     () => {
       //
@@ -78,8 +99,8 @@ function mapCollectionToFile(
     Entities: Object.keys(collection.Entities).map((key) => {
       return collection.Entities[key].ID;
     }),
-    Relations: Array.from(collection.Relations.values()).map((relation) => {
-      return relation.ID;
+    Relations: Object.keys(collection.Relations).map((key) => {
+      return collection.Relations[key].ID;
     }),
   };
   //console.log(res);
@@ -104,25 +125,56 @@ export function writeCollection(
   for (const entityID in collection.Entities) {
     writeEntity(collection.Entities[entityID], dataBasePath);
   }
-  for (const relation of collection.Relations) {
-    writeRelation(relation, dataBasePath);
+  for (const relationID in collection.Relations) {
+    writeRelation(collection.Relations[relationID], dataBasePath);
   }
 }
 
 // doing: reading from file
 
-export function readEntity(
-  entityID: Structs.Entity["ID"],
-  dataBasePath: string
-): Structs.Entity {
-  const entity: Structs.Entity = JSON.parse(
+function mapEntityFromFile(entityFile: Structs.EntityFile): Structs.Entity {
+  const res: Structs.Entity = {
+    ID: entityFile.ID,
+    Label: entityFile.Label,
+    RelationClaims: new Set(),
+  };
+  if (entityFile.Data !== undefined) {
+    res.Data = entityFile.Data;
+  }
+  return res;
+
+  //console.log(res);
+}
+
+export function readEntityPass1(
+  dataBasePath: string,
+  entityID: Structs.Entity["ID"]
+): [Structs.Entity, Structs.EntityFile] {
+  const resEntityFile: Structs.EntityFile = JSON.parse(
     fs
       .readFileSync(
         path.join(dataBasePath, "Entities", entityID + ".entity.json")
       )
       .toString()
   );
-  return entity;
+  console.log("Should be array : ", typeof resEntityFile.RelationClaims);
+  const resEntity: Structs.Entity = mapEntityFromFile(resEntityFile);
+  return [resEntity, resEntityFile];
+}
+
+export function readEntityPass2(
+  entityFile: Structs.EntityFile,
+  collection: Structs.Collection
+): Structs.Entity {
+  const resEntity: Structs.Entity = collection.Entities[entityFile.ID];
+  entityFile.RelationClaims.forEach((relationClaim) => {
+    resEntity.RelationClaims.add({
+      To: collection.Entities[relationClaim.To],
+      Direction: relationClaim.Direction,
+      Relation: collection.Relations[relationClaim.Relation],
+    });
+  });
+  return resEntity;
 }
 
 export function readRelation(
@@ -143,15 +195,17 @@ function mapCollectionFromFile(
   collectionFile: Structs.CollectionFile,
   dataBasePath: string
 ): Structs.Collection {
-  const entities: Structs.Collection["Entities"] = {};
-  collectionFile.Entities.forEach((entityID) => {
-    const entity = readEntity(entityID, dataBasePath);
-    entities[entity.ID] = entity;
-  });
-  const relations: Structs.Collection["Relations"] = new Set();
+  const relations: Structs.Collection["Relations"] = {};
   collectionFile.Relations.forEach((relationID) => {
     const relation = readRelation(relationID, dataBasePath);
-    relations.add(relation);
+    relations[relation.ID] = relation;
+  });
+  const entities: Structs.Collection["Entities"] = {};
+  const entityFiles: { [key: string]: Structs.EntityFile } = {};
+  collectionFile.Entities.forEach((entityID) => {
+    const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
+    entities[entity.ID] = entity;
+    entityFiles[entityFile.ID] = entityFile;
   });
 
   const res: Structs.Collection = {
@@ -160,6 +214,12 @@ function mapCollectionFromFile(
     Entities: entities,
     Relations: relations,
   };
+
+  collectionFile.Entities.forEach((entityID) => {
+    const entity = readEntityPass2(entityFiles[entityID], res);
+    entities[entity.ID] = entity;
+  });
+
   //console.log(res);
   return res;
 }

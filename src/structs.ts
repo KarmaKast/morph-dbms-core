@@ -24,10 +24,23 @@ export interface Entity {
 export interface Collection {
   ID: string;
   Label: string | null;
-  Entities: {
-    [key: string]: Entity;
-  };
-  Relations: Set<Relation>;
+  Entities: { [key: string]: Entity };
+  Relations: { [key: string]: Relation };
+}
+
+// files
+
+export interface RelationClaimFile {
+  To: Entity["ID"];
+  Relation: Relation["ID"];
+  Direction: Direction;
+}
+
+export interface EntityFile {
+  ID: Entity["ID"];
+  Label: Entity["Label"];
+  RelationClaims: Array<RelationClaimFile>;
+  Data?: object;
 }
 
 export interface CollectionFile {
