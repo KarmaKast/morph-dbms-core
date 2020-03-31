@@ -108,3 +108,81 @@ export function writeCollection(
     writeRelation(relation, dataBasePath);
   }
 }
+
+// doing: reading from file
+
+export function readEntity(
+  entityID: Structs.Entity["ID"],
+  dataBasePath: string
+): Structs.Entity {
+  const entity: Structs.Entity = JSON.parse(
+    fs
+      .readFileSync(
+        path.join(dataBasePath, "Entities", entityID + ".entity.json")
+      )
+      .toString()
+  );
+  return entity;
+}
+
+export function readRelation(
+  relationID: Structs.Relation["ID"],
+  dataBasePath: string
+): Structs.Relation {
+  const relation: Structs.Relation = JSON.parse(
+    fs
+      .readFileSync(
+        path.join(dataBasePath, "Relations", relationID + ".relation.json")
+      )
+      .toString()
+  );
+  return relation;
+}
+
+function mapCollectionFromFile(
+  collectionFile: Structs.CollectionFile,
+  dataBasePath: string
+): Structs.Collection {
+  const entities: Structs.Collection["Entities"] = {};
+  collectionFile.Entities.forEach((entityID) => {
+    const entity = readEntity(entityID, dataBasePath);
+    entities[entity.ID] = entity;
+  });
+  const relations: Structs.Collection["Relations"] = new Set();
+  collectionFile.Relations.forEach((relationID) => {
+    const relation = readRelation(relationID, dataBasePath);
+    relations.add(relation);
+  });
+
+  const res: Structs.Collection = {
+    ID: collectionFile.ID,
+    Label: collectionFile.Label,
+    Entities: entities,
+    Relations: relations,
+  };
+  //console.log(res);
+  return res;
+}
+
+export function readCollection(
+  collectionID: Structs.Collection["ID"],
+  dataBasePath: string
+): Structs.Collection {
+  const collectionFile: Structs.CollectionFile = JSON.parse(
+    fs
+      .readFileSync(
+        path.join(
+          dataBasePath,
+          "Collections",
+          collectionID + ".collection.json"
+        )
+      )
+      .toString()
+  );
+  console.log(collectionFile);
+  const collection: Structs.Collection = mapCollectionFromFile(
+    collectionFile,
+    dataBasePath
+  );
+  return collection;
+}
