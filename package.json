@@ -1,14 +1,17 @@
 {
   "name": "edge-database-lib",
   "version": "0.1.0",
-  "description": "custom graph DBMS",
-  "main": "dist/index.js",
-  "types": "dist/index.d.js",
+  "description": "a P2P graph DBMS",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.js",
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "tsBuild": "tsc --outDir ./dist",
-    "tsBuild:sourceMap": "tsc --sourceMap --outDir ./dist",
-    "build": "rm -r -f ./dist && npm run lint && npm run tsBuild",
+    "tsBuild": "tsc --outDir ./lib",
+    "tsBuild:sourceMap": "tsc --sourceMap --outDir ./lib",
+    "build": "rm -r -f ./lib && npm run lint && npm run tsBuild",
     "lint": "./node_modules/.bin/eslint --fix 'src/**/*.ts'"
   },
   "author": "Sree Chandan.R",

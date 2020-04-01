@@ -157,7 +157,6 @@ export function readEntityPass1(
       )
       .toString()
   );
-  console.log("Should be array : ", typeof resEntityFile.RelationClaims);
   const resEntity: Structs.Entity = mapEntityFromFile(resEntityFile);
   return [resEntity, resEntityFile];
 }
