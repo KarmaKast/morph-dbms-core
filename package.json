@@ -1,6 +1,6 @@
 {
-  "name": "edge-database-lib",
-  "version": "0.1.0",
+  "name": "morph-dbms-core",
+  "version": "0.0.9",
   "description": "a P2P graph DBMS",
   "main": "./lib/index.js",
   "types": "./lib/index.d.js",
@@ -30,6 +30,6 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "uuid": "^7.0.2"
+    "uuid": "^7.0.3"
   }
 }
