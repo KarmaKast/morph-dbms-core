@@ -146,6 +146,9 @@ function mapEntityFromFile(entityFile: Structs.EntityFile): Structs.Entity {
   //console.log(res);
 }
 
+/**
+ * pass 1: creates entity ignoring the relation claims
+ */
 export function readEntityPass1(
   dataBasePath: string,
   entityID: Structs.Entity["ID"]
@@ -163,14 +166,15 @@ export function readEntityPass1(
 
 export function readEntityPass2(
   entityFile: Structs.EntityFile,
-  collection: Structs.Collection
+  getEntityCallback: (entityID: Structs.Entity["ID"]) => Structs.Entity,
+  getRelationCallback: (relationID: Structs.Relation["ID"]) => Structs.Relation
 ): Structs.Entity {
-  const resEntity: Structs.Entity = collection.Entities[entityFile.ID];
+  const resEntity: Structs.Entity = getEntityCallback(entityFile.ID);
   entityFile.RelationClaims.forEach((relationClaim) => {
     resEntity.RelationClaims.add({
-      To: collection.Entities[relationClaim.To],
+      To: getEntityCallback(relationClaim.To),
       Direction: relationClaim.Direction,
-      Relation: collection.Relations[relationClaim.Relation],
+      Relation: getRelationCallback(relationClaim.Relation),
     });
   });
   return resEntity;
@@ -215,7 +219,15 @@ function mapCollectionFromFile(
   };
 
   collectionFile.Entities.forEach((entityID) => {
-    const entity = readEntityPass2(entityFiles[entityID], res);
+    const entity = readEntityPass2(
+      entityFiles[entityID],
+      (entityID) => {
+        return res.Entities[entityID];
+      },
+      (relationID) => {
+        return res.Relations[relationID];
+      }
+    );
     entities[entity.ID] = entity;
   });
 
