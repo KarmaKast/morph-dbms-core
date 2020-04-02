@@ -13,7 +13,7 @@
     "tsBuild:sourceMap": "tsc --sourceMap --outDir ./lib",
     "build": "rm -r -f ./lib && npm run lint && npm run tsBuild",
     "lint": "./node_modules/.bin/eslint --fix 'src/**/*.ts'",
-    "release": "np --no-2fa"
+    "release": "np"
   },
   "author": "Sree Chandan.R",
   "license": "Apache-2.0",
