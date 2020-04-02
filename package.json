@@ -1,6 +1,6 @@
 {
   "name": "@karmakast/morph-dbms-core",
-  "version": "0.1.16",
+  "version": "0.2.0",
   "description": "a P2P graph DBMS",
   "main": "./lib/index.js",
   "types": "./lib/index.d.js",
@@ -12,8 +12,7 @@
     "tsBuild": "tsc --outDir ./lib",
     "tsBuild:sourceMap": "tsc --sourceMap --outDir ./lib",
     "build": "rm -r -f ./lib && npm run lint && npm run tsBuild",
-    "lint": "./node_modules/.bin/eslint --fix 'src/**/*.ts'",
-    "release": "np"
+    "lint": "./node_modules/.bin/eslint --fix 'src/**/*.ts'"
   },
   "publishConfig": {
     "access": "public"
