@@ -1,6 +1,6 @@
 {
   "name": "morph-dbms-core",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "a P2P graph DBMS",
   "main": "./lib/index.js",
   "types": "./lib/index.d.js",
@@ -16,6 +16,13 @@
   },
   "author": "Sree Chandan.R",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KarmaKast/morph-dbms-core"
+  },
+  "bugs": {
+    "url": "https://github.com/KarmaKast/morph-dbms-core/issues"
+  },
   "devDependencies": {
     "@types/node": "^13.9.8",
     "@types/uuid": "^7.0.2",

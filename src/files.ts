@@ -1,6 +1,8 @@
 import * as Structs from "./structs";
+import * as Entity from "./entity";
 import * as fs from "fs";
 import * as path from "path";
+import { Collection } from ".";
 
 export function initDatabase(
   dataBasePath: string,
@@ -37,27 +39,6 @@ export function initDatabase(
   });
 }
 
-function mapEntityToFile(entity: Structs.Entity): Structs.EntityFile {
-  const res: Structs.EntityFile = {
-    ID: entity.ID,
-    Label: entity.Label,
-    RelationClaims: Array.from(entity.RelationClaims.values()).map(
-      (RelationClaim) => {
-        return {
-          To: RelationClaim.To.ID,
-          Direction: RelationClaim.Direction,
-          Relation: RelationClaim.Relation.ID,
-        };
-      }
-    ),
-  };
-  if (entity.Data !== undefined) {
-    res.Data = entity.Data;
-  }
-  //console.log(res);
-  return res;
-}
-
 export function writeEntity(
   entity: Structs.Entity,
   dataBasePath: string
@@ -66,7 +47,7 @@ export function writeEntity(
     path.resolve(
       path.join(dataBasePath, "Entities", entity.ID + ".entity.json")
     ),
-    JSON.stringify(mapEntityToFile(entity)),
+    JSON.stringify(Entity.condenseEntity(entity)),
     { flag: "w+" },
     () => {
       //
@@ -90,23 +71,6 @@ export function writeRelation(
   );
 }
 
-function mapCollectionToFile(
-  collection: Structs.Collection
-): Structs.CollectionFile {
-  const res: Structs.CollectionFile = {
-    ID: collection.ID,
-    Label: collection.Label,
-    Entities: Object.keys(collection.Entities).map((key) => {
-      return collection.Entities[key].ID;
-    }),
-    Relations: Object.keys(collection.Relations).map((key) => {
-      return collection.Relations[key].ID;
-    }),
-  };
-  //console.log(res);
-  return res;
-}
-
 export function writeCollection(
   collection: Structs.Collection,
   dataBasePath: string
@@ -115,7 +79,7 @@ export function writeCollection(
     path.resolve(
       path.join(dataBasePath, "Collections", collection.ID + ".collection.json")
     ),
-    JSON.stringify(mapCollectionToFile(collection)),
+    JSON.stringify(Collection.condenseCollection(collection)),
     { flag: "w+" },
     (err) => {
       if (err) throw err;
@@ -132,52 +96,22 @@ export function writeCollection(
 
 // doing: reading from file
 
-function mapEntityFromFile(entityFile: Structs.EntityFile): Structs.Entity {
-  const res: Structs.Entity = {
-    ID: entityFile.ID,
-    Label: entityFile.Label,
-    RelationClaims: new Set(),
-  };
-  if (entityFile.Data !== undefined) {
-    res.Data = entityFile.Data;
-  }
-  return res;
-
-  //console.log(res);
-}
-
 /**
  * pass 1: creates entity ignoring the relation claims
  */
 export function readEntityPass1(
   dataBasePath: string,
   entityID: Structs.Entity["ID"]
-): [Structs.Entity, Structs.EntityFile] {
-  const resEntityFile: Structs.EntityFile = JSON.parse(
+): [Structs.Entity, Structs.EntityDense] {
+  const resEntityFile: Structs.EntityDense = JSON.parse(
     fs
       .readFileSync(
         path.join(dataBasePath, "Entities", entityID + ".entity.json")
       )
       .toString()
   );
-  const resEntity: Structs.Entity = mapEntityFromFile(resEntityFile);
+  const resEntity: Structs.Entity = Entity.expandCondensedEntity(resEntityFile);
   return [resEntity, resEntityFile];
-}
-
-export function readEntityPass2(
-  entityFile: Structs.EntityFile,
-  getEntityCallback: (entityID: Structs.Entity["ID"]) => Structs.Entity,
-  getRelationCallback: (relationID: Structs.Relation["ID"]) => Structs.Relation
-): Structs.Entity {
-  const resEntity: Structs.Entity = getEntityCallback(entityFile.ID);
-  entityFile.RelationClaims.forEach((relationClaim) => {
-    resEntity.RelationClaims.add({
-      To: getEntityCallback(relationClaim.To),
-      Direction: relationClaim.Direction,
-      Relation: getRelationCallback(relationClaim.Relation),
-    });
-  });
-  return resEntity;
 }
 
 export function readRelation(
@@ -194,52 +128,11 @@ export function readRelation(
   return relation;
 }
 
-function mapCollectionFromFile(
-  collectionFile: Structs.CollectionFile,
-  dataBasePath: string
-): Structs.Collection {
-  const relations: Structs.Collection["Relations"] = {};
-  collectionFile.Relations.forEach((relationID) => {
-    const relation = readRelation(relationID, dataBasePath);
-    relations[relation.ID] = relation;
-  });
-  const entities: Structs.Collection["Entities"] = {};
-  const entityFiles: { [key: string]: Structs.EntityFile } = {};
-  collectionFile.Entities.forEach((entityID) => {
-    const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
-    entities[entity.ID] = entity;
-    entityFiles[entityFile.ID] = entityFile;
-  });
-
-  const res: Structs.Collection = {
-    ID: collectionFile.ID,
-    Label: collectionFile.Label,
-    Entities: entities,
-    Relations: relations,
-  };
-
-  collectionFile.Entities.forEach((entityID) => {
-    const entity = readEntityPass2(
-      entityFiles[entityID],
-      (entityID) => {
-        return res.Entities[entityID];
-      },
-      (relationID) => {
-        return res.Relations[relationID];
-      }
-    );
-    entities[entity.ID] = entity;
-  });
-
-  //console.log(res);
-  return res;
-}
-
 export function readCollection(
   collectionID: Structs.Collection["ID"],
   dataBasePath: string
 ): Structs.Collection {
-  const collectionFile: Structs.CollectionFile = JSON.parse(
+  const condensedcollection: Structs.CollectionDense = JSON.parse(
     fs
       .readFileSync(
         path.join(
@@ -250,10 +143,27 @@ export function readCollection(
       )
       .toString()
   );
-  console.log(collectionFile);
-  const collection: Structs.Collection = mapCollectionFromFile(
-    collectionFile,
-    dataBasePath
+  console.log(condensedcollection);
+
+  const relations: Structs.Collection["Relations"] = {};
+  condensedcollection.Relations.forEach((relationID) => {
+    const relation = readRelation(relationID, dataBasePath);
+    relations[relation.ID] = relation;
+  });
+
+  const condensedEntities: { [key: string]: Structs.EntityDense } = {};
+  const FirstPassEntities: Structs.Collection["Entities"] = {};
+  condensedcollection.Entities.forEach((entityID) => {
+    const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
+    FirstPassEntities[entity.ID] = entity;
+    condensedEntities[entityFile.ID] = entityFile;
+  });
+
+  const collection: Structs.Collection = Collection.expandCondensedCollection(
+    condensedcollection,
+    relations,
+    condensedEntities,
+    FirstPassEntities
   );
   return collection;
 }

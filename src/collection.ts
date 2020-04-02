@@ -45,6 +45,52 @@ export function drop(
   delete collection.Entities[entity.ID];
 }
 
+export function condenseCollection(
+  collection: Structs.Collection
+): Structs.CollectionDense {
+  const res: Structs.CollectionDense = {
+    ID: collection.ID,
+    Label: collection.Label,
+    Entities: Object.keys(collection.Entities).map((key) => {
+      return collection.Entities[key].ID;
+    }),
+    Relations: Object.keys(collection.Relations).map((key) => {
+      return collection.Relations[key].ID;
+    }),
+  };
+  return res;
+}
+
+export function expandCondensedCollection(
+  condensedcollection: Structs.CollectionDense,
+  relations: Structs.Collection["Relations"],
+  condensedEntities: { [key: string]: Structs.EntityDense },
+  firstPassEntities: Structs.Collection["Entities"]
+): Structs.Collection {
+  const res: Structs.Collection = {
+    ID: condensedcollection.ID,
+    Label: condensedcollection.Label,
+    Entities: firstPassEntities,
+    Relations: relations,
+  };
+
+  const secondPassEntities = firstPassEntities;
+
+  condensedcollection.Entities.forEach((entityID) => {
+    const entity = Entity.populateEntityRelationClaims(
+      condensedEntities[entityID],
+      (entityID) => {
+        return res.Entities[entityID];
+      },
+      (relationID) => {
+        return res.Relations[relationID];
+      }
+    );
+    secondPassEntities[entity.ID] = entity;
+  });
+  return res;
+}
+
 export function describe(collection: Structs.Collection): void {
   console.log("--------------------------Collection--------------------------");
   console.log("ID : ", collection.ID);
@@ -54,6 +100,7 @@ export function describe(collection: Structs.Collection): void {
     Entity.describe(collection.Entities[entityID]);
   }
   console.log("}");
+  console.log("Relations :");
   console.log(collection.Relations);
   console.log("--------------------------------------------------------------");
 }

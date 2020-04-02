@@ -26,6 +26,34 @@ export class QueryEntity {
     }
     return false;
   }
+  usesRelation(
+    relationLabel: Structs.Relation["Label"],
+    relation?: Structs.Relation,
+    relationID?: Structs.Relation["ID"]
+  ): boolean {
+    for (const relClaim of this.entity.RelationClaims) {
+      if (relation) {
+        if (relation === relClaim.Relation) {
+          return true;
+        } else {
+          return false;
+        }
+      } else if (relationID) {
+        if (relationID === relClaim.Relation.ID) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        if (relationLabel === relClaim.Relation.Label) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+    return false;
+  }
 }
 
 export class QueryCollection {
@@ -34,7 +62,7 @@ export class QueryCollection {
     this.collection = collection;
   }
   hasLabel(label: Structs.Entity["Label"]): QueryCollection {
-    const newCollection: Structs.Collection = Collection.createNew(
+    const newCollection = Collection.createNew(
       this.collection.Label,
       undefined,
       undefined,
@@ -56,7 +84,7 @@ export class QueryCollection {
     relation: Structs.Relation,
     direction: Structs.Direction
   ): QueryCollection {
-    const newCollection: Structs.Collection = Collection.createNew(
+    const newCollection = Collection.createNew(
       this.collection.Label,
       undefined,
       undefined,
@@ -65,6 +93,51 @@ export class QueryCollection {
     for (const entity of Object.values(this.collection.Entities)) {
       if (new QueryEntity(entity).hasRelationClaim(relation, direction)) {
         this.collection.Entities[entity.ID] = entity;
+      }
+    }
+    return new QueryCollection(newCollection);
+  }
+  usesRelation(
+    relationLabel: Structs.Relation["Label"],
+    relation?: Structs.Relation,
+    relationID?: Structs.Relation["ID"]
+  ): QueryCollection {
+    const newCollection = Collection.createNew(
+      this.collection.Label,
+      undefined,
+      undefined,
+      this.collection.ID
+    );
+    if (relation) {
+      if (Object.values(this.collection.Relations).includes(relation)) {
+        newCollection.Relations[relation.ID] = relation;
+      }
+    } else if (relationID) {
+      if (Object.keys(this.collection.Relations).includes(relationID)) {
+        newCollection.Relations[relationID] = this.collection.Relations[
+          relationID
+        ];
+      }
+    } else {
+      const filteredRelations = Object.values(this.collection.Relations).filter(
+        (relation_) => relation_.Label === relationLabel
+      );
+      if (filteredRelations.length === 1) {
+        newCollection.Relations[
+          filteredRelations[0].ID
+        ] = this.collection.Relations[filteredRelations[0].ID];
+      }
+    }
+
+    for (const entity of Object.values(this.collection.Entities)) {
+      if (
+        new QueryEntity(entity).usesRelation(
+          relationLabel,
+          relation,
+          relationID
+        )
+      ) {
+        newCollection.Entities[entity.ID] = entity;
       }
     }
     return new QueryCollection(newCollection);
