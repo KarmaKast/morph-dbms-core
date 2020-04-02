@@ -71,23 +71,6 @@ export function writeRelation(
   );
 }
 
-function mapCollectionToFile(
-  collection: Structs.Collection
-): Structs.CollectionDense {
-  const res: Structs.CollectionDense = {
-    ID: collection.ID,
-    Label: collection.Label,
-    Entities: Object.keys(collection.Entities).map((key) => {
-      return collection.Entities[key].ID;
-    }),
-    Relations: Object.keys(collection.Relations).map((key) => {
-      return collection.Relations[key].ID;
-    }),
-  };
-  //console.log(res);
-  return res;
-}
-
 export function writeCollection(
   collection: Structs.Collection,
   dataBasePath: string
@@ -131,22 +114,6 @@ export function readEntityPass1(
   return [resEntity, resEntityFile];
 }
 
-export function readEntityPass2(
-  entityFile: Structs.EntityDense,
-  getEntityCallback: (entityID: Structs.Entity["ID"]) => Structs.Entity,
-  getRelationCallback: (relationID: Structs.Relation["ID"]) => Structs.Relation
-): Structs.Entity {
-  const resEntity: Structs.Entity = getEntityCallback(entityFile.ID);
-  entityFile.RelationClaims.forEach((relationClaim) => {
-    resEntity.RelationClaims.add({
-      To: getEntityCallback(relationClaim.To),
-      Direction: relationClaim.Direction,
-      Relation: getRelationCallback(relationClaim.Relation),
-    });
-  });
-  return resEntity;
-}
-
 export function readRelation(
   relationID: Structs.Relation["ID"],
   dataBasePath: string
@@ -161,52 +128,11 @@ export function readRelation(
   return relation;
 }
 
-function mapCollectionFromFile(
-  collectionFile: Structs.CollectionDense,
-  dataBasePath: string
-): Structs.Collection {
-  const relations: Structs.Collection["Relations"] = {};
-  collectionFile.Relations.forEach((relationID) => {
-    const relation = readRelation(relationID, dataBasePath);
-    relations[relation.ID] = relation;
-  });
-  const entities: Structs.Collection["Entities"] = {};
-  const entityFiles: { [key: string]: Structs.EntityDense } = {};
-  collectionFile.Entities.forEach((entityID) => {
-    const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
-    entities[entity.ID] = entity;
-    entityFiles[entityFile.ID] = entityFile;
-  });
-
-  const res: Structs.Collection = {
-    ID: collectionFile.ID,
-    Label: collectionFile.Label,
-    Entities: entities,
-    Relations: relations,
-  };
-
-  collectionFile.Entities.forEach((entityID) => {
-    const entity = readEntityPass2(
-      entityFiles[entityID],
-      (entityID) => {
-        return res.Entities[entityID];
-      },
-      (relationID) => {
-        return res.Relations[relationID];
-      }
-    );
-    entities[entity.ID] = entity;
-  });
-
-  //console.log(res);
-  return res;
-}
-
 export function readCollection(
   collectionID: Structs.Collection["ID"],
   dataBasePath: string
 ): Structs.Collection {
-  const collectionFile: Structs.CollectionDense = JSON.parse(
+  const condensedcollection: Structs.CollectionDense = JSON.parse(
     fs
       .readFileSync(
         path.join(
@@ -217,18 +143,27 @@ export function readCollection(
       )
       .toString()
   );
-  console.log(collectionFile);
-  /*
-  const collection: Structs.Collection = mapCollectionFromFile(
-    collectionFile,
-    dataBasePath
-  );*/
+  console.log(condensedcollection);
+
+  const relations: Structs.Collection["Relations"] = {};
+  condensedcollection.Relations.forEach((relationID) => {
+    const relation = readRelation(relationID, dataBasePath);
+    relations[relation.ID] = relation;
+  });
+
+  const condensedEntities: { [key: string]: Structs.EntityDense } = {};
+  const FirstPassEntities: Structs.Collection["Entities"] = {};
+  condensedcollection.Entities.forEach((entityID) => {
+    const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
+    FirstPassEntities[entity.ID] = entity;
+    condensedEntities[entityFile.ID] = entityFile;
+  });
+
   const collection: Structs.Collection = Collection.expandCondensedCollection(
-    collectionFile,
-    dataBasePath,
-    readRelation,
-    readEntityPass1,
-    readEntityPass2
+    condensedcollection,
+    relations,
+    condensedEntities,
+    FirstPassEntities
   );
   return collection;
 }

@@ -46,6 +46,28 @@ export function getUniqueRelations(
   return relations;
 }
 
+/**
+ * populates relationclaims of a pass1 entity
+ * @param condensedEntity
+ * @param getEntityCallback
+ * @param getRelationCallback
+ */
+export function populateEntityRelationClaims(
+  condensedEntity: Structs.EntityDense,
+  getEntityCallback: (entityID: Structs.Entity["ID"]) => Structs.Entity,
+  getRelationCallback: (relationID: Structs.Relation["ID"]) => Structs.Relation
+): Structs.Entity {
+  const resEntity: Structs.Entity = getEntityCallback(condensedEntity.ID);
+  condensedEntity.RelationClaims.forEach((relationClaim) => {
+    resEntity.RelationClaims.add({
+      To: getEntityCallback(relationClaim.To),
+      Direction: relationClaim.Direction,
+      Relation: getRelationCallback(relationClaim.Relation),
+    });
+  });
+  return resEntity;
+}
+
 export function condenseEntity(entity: Structs.Entity): Structs.EntityDense {
   const res: Structs.EntityDense = {
     ID: entity.ID,

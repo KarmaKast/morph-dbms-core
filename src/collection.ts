@@ -63,46 +63,22 @@ export function condenseCollection(
 
 export function expandCondensedCollection(
   condensedcollection: Structs.CollectionDense,
-  dataBasePath: string,
-  readRelation: (
-    relationID: Structs.Relation["ID"],
-    dataBasePath: string
-  ) => Structs.Relation,
-  readEntityPass1: (
-    dataBasePath: string,
-    entityID: Structs.Entity["ID"]
-  ) => [Structs.Entity, Structs.EntityDense],
-  readEntityPass2: (
-    condensedEntity: Structs.EntityDense,
-    getEntityCallback: (entityID: Structs.Entity["ID"]) => Structs.Entity,
-    getRelationCallback: (
-      relationID: Structs.Relation["ID"]
-    ) => Structs.Relation
-  ) => Structs.Entity
+  relations: Structs.Collection["Relations"],
+  condensedEntities: { [key: string]: Structs.EntityDense },
+  firstPassEntities: Structs.Collection["Entities"]
 ): Structs.Collection {
-  const relations: Structs.Collection["Relations"] = {};
-  condensedcollection.Relations.forEach((relationID) => {
-    const relation = readRelation(relationID, dataBasePath);
-    relations[relation.ID] = relation;
-  });
-  const entities: Structs.Collection["Entities"] = {};
-  const entityFiles: { [key: string]: Structs.EntityDense } = {};
-  condensedcollection.Entities.forEach((entityID) => {
-    const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
-    entities[entity.ID] = entity;
-    entityFiles[entityFile.ID] = entityFile;
-  });
-
   const res: Structs.Collection = {
     ID: condensedcollection.ID,
     Label: condensedcollection.Label,
-    Entities: entities,
+    Entities: firstPassEntities,
     Relations: relations,
   };
 
+  const secondPassEntities = firstPassEntities;
+
   condensedcollection.Entities.forEach((entityID) => {
-    const entity = readEntityPass2(
-      entityFiles[entityID],
+    const entity = Entity.populateEntityRelationClaims(
+      condensedEntities[entityID],
       (entityID) => {
         return res.Entities[entityID];
       },
@@ -110,7 +86,7 @@ export function expandCondensedCollection(
         return res.Relations[relationID];
       }
     );
-    entities[entity.ID] = entity;
+    secondPassEntities[entity.ID] = entity;
   });
   return res;
 }
