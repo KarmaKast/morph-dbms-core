@@ -68,18 +68,22 @@ export function populateEntityRelationClaims(
   return resEntity;
 }
 
+function condenseRelationClaim(
+  relClaim: Structs.RelationClaim
+): Structs.RelationClaimDense {
+  return {
+    To: relClaim.To.ID,
+    Direction: relClaim.Direction,
+    Relation: relClaim.Relation.ID,
+  };
+}
+
 export function condenseEntity(entity: Structs.Entity): Structs.EntityDense {
   const res: Structs.EntityDense = {
     ID: entity.ID,
     Label: entity.Label,
     RelationClaims: Array.from(entity.RelationClaims.values()).map(
-      (RelationClaim) => {
-        return {
-          To: RelationClaim.To.ID,
-          Direction: RelationClaim.Direction,
-          Relation: RelationClaim.Relation.ID,
-        };
-      }
+      condenseRelationClaim
     ),
   };
   if (entity.Data !== undefined) {
@@ -113,7 +117,10 @@ export function describe(entity: Structs.Entity): void {
     entity.RelationClaims.size === 0 ? "{}" : ""
   );
   for (const relClaim of entity.RelationClaims) {
-    console.log("  ", JSON.stringify(relClaim, undefined, 4));
+    console.log(
+      "  ",
+      JSON.stringify(condenseRelationClaim(relClaim), undefined, 4)
+    );
   }
   console.log("}");
 }
