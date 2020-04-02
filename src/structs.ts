@@ -30,7 +30,7 @@ export interface Collection {
 
 // files
 
-export interface RelationClaimSDense {
+export interface RelationClaimDense {
   To: Entity["ID"];
   Relation: Relation["ID"];
   Direction: Direction;
@@ -39,7 +39,7 @@ export interface RelationClaimSDense {
 export interface EntityDense {
   ID: Entity["ID"];
   Label: Entity["Label"];
-  RelationClaims: Array<RelationClaimSDense>;
+  RelationClaims: Array<RelationClaimDense>;
   Data?: object;
 }
 
