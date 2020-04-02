@@ -1,6 +1,6 @@
 {
   "name": "morph-dbms-core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "a P2P graph DBMS",
   "main": "./lib/index.js",
   "types": "./lib/index.d.js",
