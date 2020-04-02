@@ -46,6 +46,52 @@ export function getUniqueRelations(
   return relations;
 }
 
+export function condenseEntity(entity: Structs.Entity): Structs.EntityDense {
+  const res: Structs.EntityDense = {
+    ID: entity.ID,
+    Label: entity.Label,
+    RelationClaims: Array.from(entity.RelationClaims.values()).map(
+      (RelationClaim) => {
+        return {
+          To: RelationClaim.To.ID,
+          Direction: RelationClaim.Direction,
+          Relation: RelationClaim.Relation.ID,
+        };
+      }
+    ),
+  };
+  if (entity.Data !== undefined) {
+    res.Data = entity.Data;
+  }
+  //console.log(res);
+  return res;
+}
+
+export function expandCondensedEntity(
+  entityCondensed: Structs.EntityDense
+): Structs.Entity {
+  const res: Structs.Entity = {
+    ID: entityCondensed.ID,
+    Label: entityCondensed.Label,
+    RelationClaims: new Set(),
+  };
+  if (entityCondensed.Data !== undefined) {
+    res.Data = entityCondensed.Data;
+  }
+  return res;
+}
+
 export function describe(entity: Structs.Entity): void {
-  console.log(entity);
+  console.log(
+    "{\n  ID: ",
+    entity.ID,
+    "\n  Label: ",
+    entity.Label,
+    "\n  RelationClaims: ",
+    entity.RelationClaims.size === 0 ? "{}" : ""
+  );
+  for (const relClaim of entity.RelationClaims) {
+    console.log("  ", JSON.stringify(relClaim, undefined, 4));
+  }
+  console.log("}");
 }
