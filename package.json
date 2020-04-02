@@ -1,5 +1,5 @@
 {
-  "name": "morph-dbms-core",
+  "name": "@karmakast/morph-dbms-core",
   "version": "0.1.9",
   "description": "a P2P graph DBMS",
   "main": "./lib/index.js",
@@ -14,6 +14,9 @@
     "build": "rm -r -f ./lib && npm run lint && npm run tsBuild",
     "lint": "./node_modules/.bin/eslint --fix 'src/**/*.ts'",
     "release": "np"
+  },
+  "publishConfig": {
+    "access" : "public"
   },
   "author": "Sree Chandan.R",
   "license": "Apache-2.0",
