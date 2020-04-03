@@ -15,10 +15,15 @@ export class QueryEntity {
   }
   hasRelationClaim(
     relation: Structs.Relation,
-    direction: Structs.Direction
+    direction: Structs.Direction,
+    to?: Structs.Entity
   ): boolean {
     for (const relClaim of this.entity.RelationClaims) {
-      if (relation === relClaim.Relation && direction === relClaim.Direction) {
+      if (
+        relation.ID === relClaim.Relation.ID &&
+        direction === relClaim.Direction &&
+        (to === undefined || to.ID === relClaim.To.ID)
+      ) {
         return true;
       } else {
         return false;
@@ -82,7 +87,8 @@ export class QueryCollection {
   }
   hasRelationClaim(
     relation: Structs.Relation,
-    direction: Structs.Direction
+    direction: Structs.Direction,
+    to?: Structs.Entity
   ): QueryCollection {
     const newCollection = Collection.createNew(
       this.collection.Label,
@@ -91,8 +97,9 @@ export class QueryCollection {
       this.collection.ID
     );
     for (const entity of Object.values(this.collection.Entities)) {
-      if (new QueryEntity(entity).hasRelationClaim(relation, direction)) {
-        this.collection.Entities[entity.ID] = entity;
+      if (new QueryEntity(entity).hasRelationClaim(relation, direction, to)) {
+        newCollection.Entities[entity.ID] = entity;
+        newCollection.Relations[relation.ID] = relation;
       }
     }
     return new QueryCollection(newCollection);
@@ -141,5 +148,8 @@ export class QueryCollection {
       }
     }
     return new QueryCollection(newCollection);
+  }
+  filterData(properties?: Array<string> | null) {
+    if (properties === undefined) return new QueryCollection(this.collection);
   }
 }

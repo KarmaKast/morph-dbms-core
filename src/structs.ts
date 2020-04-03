@@ -30,22 +30,18 @@ export interface Collection {
 
 // files
 
-export interface RelationClaimDense {
+export interface RelationClaimDense
+  extends Omit<RelationClaim, "To" | "Relation"> {
   To: Entity["ID"];
   Relation: Relation["ID"];
-  Direction: Direction;
 }
 
-export interface EntityDense {
-  ID: Entity["ID"];
-  Label: Entity["Label"];
+export interface EntityDense extends Omit<Entity, "RelationClaims"> {
   RelationClaims: Array<RelationClaimDense>;
-  Data?: object;
 }
 
-export interface CollectionDense {
-  ID: Collection["ID"];
-  Label: Collection["Label"];
+export interface CollectionDense
+  extends Omit<Collection, "Entities" | "Relations"> {
   Entities: Array<Entity["ID"]>;
   Relations: Array<Relation["ID"]>;
 }

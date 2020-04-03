@@ -93,6 +93,10 @@ export function condenseEntity(entity: Structs.Entity): Structs.EntityDense {
   return res;
 }
 
+/**
+ * ignores rel claims
+ * @param entityCondensed
+ */
 export function expandCondensedEntity(
   entityCondensed: Structs.EntityDense
 ): Structs.Entity {
@@ -107,20 +111,33 @@ export function expandCondensedEntity(
   return res;
 }
 
-export function describe(entity: Structs.Entity): void {
-  console.log(
-    "{\n  ID: ",
-    entity.ID,
-    "\n  Label: ",
-    entity.Label,
-    "\n  RelationClaims: ",
-    entity.RelationClaims.size === 0 ? "{}" : ""
-  );
-  for (const relClaim of entity.RelationClaims) {
-    console.log(
-      "  ",
-      JSON.stringify(condenseRelationClaim(relClaim), undefined, 4)
-    );
-  }
-  console.log("}");
+interface RelationClaimDescribed
+  extends Omit<Structs.RelationClaim, "To" | "Relation"> {
+  To: string;
+  Relation: string;
+}
+
+interface EntityDescribed extends Omit<Structs.Entity, "RelationClaims"> {
+  RelationClaims: Array<RelationClaimDescribed>;
+}
+
+export function describe(
+  entity: Structs.Entity,
+  printToConsole = true,
+  dataHieghtLimit = 10
+): EntityDescribed {
+  const log: EntityDescribed = {
+    ID: entity.ID,
+    Label: entity.Label,
+    Data: entity.Data,
+    RelationClaims: Array.from(entity.RelationClaims).map((relClaim) => {
+      return {
+        To: `{ ID: ${relClaim.To.ID}, Label: ${relClaim.To.Label} }`,
+        Direction: relClaim.Direction,
+        Relation: `{ ID: ${relClaim.Relation.ID}, Label: ${relClaim.Relation.Label} }`,
+      };
+    }),
+  };
+  if (printToConsole) console.log(JSON.stringify(log, undefined, 2));
+  return log;
 }

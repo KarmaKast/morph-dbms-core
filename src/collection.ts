@@ -76,7 +76,7 @@ export function expandCondensedCollection(
 
   const secondPassEntities = firstPassEntities;
 
-  condensedcollection.Entities.forEach((entityID) => {
+  condensedcollection.Entities.map((entityID) => {
     const entity = Entity.populateEntityRelationClaims(
       condensedEntities[entityID],
       (entityID) => {
@@ -91,16 +91,48 @@ export function expandCondensedCollection(
   return res;
 }
 
-export function describe(collection: Structs.Collection): void {
-  console.log("--------------------------Collection--------------------------");
-  console.log("ID : ", collection.ID);
-  console.log("Label : ", collection.Label);
-  console.log("Entities : {");
-  for (const entityID in collection.Entities) {
-    Entity.describe(collection.Entities[entityID]);
+interface CollectionDescribed
+  extends Omit<Structs.Collection, "Entities" | "Relations"> {
+  Entities: Array<ReturnType<typeof Entity.describe>>;
+  Relations: Array<Structs.Relation>;
+}
+
+export function describe(
+  collection: Structs.Collection,
+  printToConsole = true,
+  dataHieghtLimit = 10
+): CollectionDescribed {
+  //console.log("ID : ", collection.ID);
+  //console.log("Label : ", collection.Label);
+  //console.log("Entities : {");
+  //for (const entityID in collection.Entities) {
+  //  Entity.describe(collection.Entities[entityID]);
+  //}
+  //console.log("}");
+  //console.log("Relations :");
+  //console.log(Object.values(collection.Relations));
+
+  const log = {
+    ID: collection.ID,
+    Label: collection.Label,
+    Entities: Object.keys(collection.Entities).map((entityID) => {
+      return Entity.describe(
+        collection.Entities[entityID],
+        false,
+        dataHieghtLimit
+      );
+    }),
+    Relations: Object.values(collection.Relations),
+  } as CollectionDescribed;
+
+  if (printToConsole) {
+    console.log(
+      "--------------------------------------------------------------"
+    );
+    console.log(JSON.stringify(log, undefined, 2));
+    console.log(
+      "--------------------------------------------------------------"
+    );
   }
-  console.log("}");
-  console.log("Relations :");
-  console.log(collection.Relations);
-  console.log("--------------------------------------------------------------");
+  return log;
 }
