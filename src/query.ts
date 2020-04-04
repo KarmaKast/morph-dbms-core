@@ -63,9 +63,20 @@ export class QueryEntity {
 
 export class QueryCollection {
   collection: Structs.Collection;
+
   constructor(collection: Structs.Collection) {
     this.collection = collection;
   }
+
+  doSomething = (
+    callback: (QueryObj: QueryCollection) => void
+  ): QueryCollection => {
+    callback(this);
+    return this;
+  };
+
+  // queries
+
   hasLabel(label: Structs.Entity["Label"]): QueryCollection {
     const newCollection = Collection.createNew(
       this.collection.Label,
@@ -85,6 +96,7 @@ export class QueryCollection {
     }
     return new QueryCollection(newCollection);
   }
+
   hasRelationClaim(
     relation: Structs.Relation,
     direction: Structs.Direction,
@@ -104,6 +116,7 @@ export class QueryCollection {
     }
     return new QueryCollection(newCollection);
   }
+
   usesRelation(
     relationLabel: Structs.Relation["Label"],
     relation?: Structs.Relation,
@@ -149,7 +162,31 @@ export class QueryCollection {
     }
     return new QueryCollection(newCollection);
   }
-  filterData(properties?: Array<string> | null) {
-    if (properties === undefined) return new QueryCollection(this.collection);
+
+  filterData(properties?: Array<string> | null): QueryCollection {
+    const newCollection = Collection.createNew(
+      this.collection.Label,
+      this.collection.Entities,
+      this.collection.Relations,
+      this.collection.ID
+    );
+    if (properties === null || (properties && properties.length === 0)) {
+      Object.values(newCollection.Entities).map((entity) => {
+        delete entity.Data;
+      });
+    } else if (properties && properties.length !== 0) {
+      Object.values(newCollection.Entities).map((entity) => {
+        if (entity.Data !== undefined) {
+          const entityCopy = entity;
+          entity.Data = {};
+          properties.map((property) => {
+            if (entity.Data && entityCopy.Data)
+              entity.Data[property] = entityCopy.Data[property];
+            return property;
+          });
+        }
+      });
+    }
+    return new QueryCollection(newCollection);
   }
 }

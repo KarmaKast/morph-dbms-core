@@ -7,7 +7,7 @@ import { Collection } from ".";
 export function initDatabase(
   dataBasePath: string,
   mode: "init" | "reset" = "init"
-): Promise<void> {
+): Promise<string> {
   function init(): void {
     fs.mkdirSync(dataBasePath, { recursive: true });
     fs.mkdirSync(path.join(dataBasePath, "Entities"), { recursive: true });
@@ -22,36 +22,36 @@ export function initDatabase(
       }
       init();
       return new Promise((resolve) => {
-        console.log("reset done");
-        resolve();
+        const msg = "reset done";
+        resolve(msg);
       });
-
-      break;
     case "init":
       // check database folder integrity
       if (!fs.existsSync(dataBasePath)) {
         init();
       }
-      break;
+      return new Promise((resolve) => {
+        const msg = "init done";
+        resolve(msg);
+      });
+    default:
+      return new Promise((resolve, reject) => {
+        const msg = `expected 'init' | 'reset but received ${mode}`;
+        reject(msg);
+      });
   }
-  return new Promise((resolve, reject) => {
-    reject("idk");
-  });
 }
 
 export function writeEntity(
   entity: Structs.Entity,
   dataBasePath: string
 ): void {
-  fs.writeFile(
+  fs.writeFileSync(
     path.resolve(
       path.join(dataBasePath, "Entities", entity.ID + ".entity.json")
     ),
     JSON.stringify(Entity.condenseEntity(entity)),
-    { flag: "w+" },
-    () => {
-      //
-    }
+    { flag: "w+" }
   );
 }
 
@@ -59,15 +59,12 @@ export function writeRelation(
   relation: Structs.Relation,
   dataBasePath: string
 ): void {
-  fs.writeFile(
+  fs.writeFileSync(
     path.resolve(
       path.join(dataBasePath, "Relations", relation.ID + ".relation.json")
     ),
     JSON.stringify(relation),
-    { flag: "w+" },
-    () => {
-      //
-    }
+    { flag: "w+" }
   );
 }
 
@@ -75,16 +72,12 @@ export function writeCollection(
   collection: Structs.Collection,
   dataBasePath: string
 ): void {
-  fs.writeFile(
+  fs.writeFileSync(
     path.resolve(
       path.join(dataBasePath, "Collections", collection.ID + ".collection.json")
     ),
     JSON.stringify(Collection.condenseCollection(collection)),
-    { flag: "w+" },
-    (err) => {
-      if (err) throw err;
-      console.log("The file has been saved!");
-    }
+    { flag: "w+" }
   );
   for (const entityID in collection.Entities) {
     writeEntity(collection.Entities[entityID], dataBasePath);

@@ -4,8 +4,8 @@ export interface Relation {
 }
 
 export enum Direction {
-  FromSelf = "->",
-  ToSelf = "<-",
+  SelfToTarget = "->",
+  TargetToSelf = "<-",
 }
 
 export interface RelationClaim {
@@ -18,14 +18,14 @@ export interface Entity {
   ID: string;
   Label: string | null;
   RelationClaims: Set<RelationClaim>;
-  Data?: object;
+  Data?: Record<string, object>;
 }
 
 export interface Collection {
   ID: string;
   Label: string | null;
-  Entities: { [key: string]: Entity };
-  Relations: { [key: string]: Relation };
+  Entities: Record<string, Entity>;
+  Relations: Record<string, Relation>;
 }
 
 // files

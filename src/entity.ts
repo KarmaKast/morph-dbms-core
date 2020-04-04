@@ -124,20 +124,30 @@ interface EntityDescribed extends Omit<Structs.Entity, "RelationClaims"> {
 export function describe(
   entity: Structs.Entity,
   printToConsole = true,
-  dataHieghtLimit = 10
+  dataHeightLimit = 10
 ): EntityDescribed {
   const log: EntityDescribed = {
     ID: entity.ID,
     Label: entity.Label,
-    Data: entity.Data,
     RelationClaims: Array.from(entity.RelationClaims).map((relClaim) => {
       return {
-        To: `{ ID: ${relClaim.To.ID}, Label: ${relClaim.To.Label} }`,
+        To: `{ ID: '${relClaim.To.ID}', Label: '${relClaim.To.Label}' }`,
         Direction: relClaim.Direction,
-        Relation: `{ ID: ${relClaim.Relation.ID}, Label: ${relClaim.Relation.Label} }`,
+        Relation: `{ ID: '${relClaim.Relation.ID}', Label: '${relClaim.Relation.Label}' }`,
       };
     }),
   };
-  if (printToConsole) console.log(JSON.stringify(log, undefined, 2));
+  if (entity.Data) {
+    log.Data = entity.Data;
+  }
+  if (printToConsole) {
+    console.log(
+      "----------------------------Entity----------------------------"
+    );
+    console.log(JSON.stringify(log, undefined, 2));
+    console.log(
+      "--------------------------------------------------------------"
+    );
+  }
   return log;
 }

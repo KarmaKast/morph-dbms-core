@@ -100,7 +100,7 @@ interface CollectionDescribed
 export function describe(
   collection: Structs.Collection,
   printToConsole = true,
-  dataHieghtLimit = 10
+  dataHeightLimit = 10
 ): CollectionDescribed {
   //console.log("ID : ", collection.ID);
   //console.log("Label : ", collection.Label);
@@ -119,7 +119,7 @@ export function describe(
       return Entity.describe(
         collection.Entities[entityID],
         false,
-        dataHieghtLimit
+        dataHeightLimit
       );
     }),
     Relations: Object.values(collection.Relations),
@@ -127,7 +127,7 @@ export function describe(
 
   if (printToConsole) {
     console.log(
-      "--------------------------------------------------------------"
+      "--------------------------Collection--------------------------"
     );
     console.log(JSON.stringify(log, undefined, 2));
     console.log(
