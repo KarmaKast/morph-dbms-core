@@ -79,11 +79,11 @@ export function writeCollection(
     JSON.stringify(Collection.condenseCollection(collection)),
     { flag: "w+" }
   );
-  for (const entityID in collection.Entities) {
-    writeEntity(collection.Entities[entityID], dataBasePath);
+  for (const [, entity] of collection.Entities) {
+    writeEntity(entity, dataBasePath);
   }
-  for (const relationID in collection.Relations) {
-    writeRelation(collection.Relations[relationID], dataBasePath);
+  for (const [, relation] of collection.Relations) {
+    writeRelation(relation, dataBasePath);
   }
 }
 
@@ -138,18 +138,18 @@ export function readCollection(
   );
   console.log(condensedcollection);
 
-  const relations: Structs.Collection["Relations"] = {};
+  const relations: Structs.Collection["Relations"] = new Map();
   condensedcollection.Relations.forEach((relationID) => {
     const relation = readRelation(relationID, dataBasePath);
-    relations[relation.ID] = relation;
+    relations.set(relation.ID, relation);
   });
 
-  const condensedEntities: { [key: string]: Structs.EntityDense } = {};
-  const FirstPassEntities: Structs.Collection["Entities"] = {};
+  const condensedEntities: Structs.CondensedEntities = new Map();
+  const FirstPassEntities: Structs.Collection["Entities"] = new Map();
   condensedcollection.Entities.forEach((entityID) => {
     const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
-    FirstPassEntities[entity.ID] = entity;
-    condensedEntities[entityFile.ID] = entityFile;
+    FirstPassEntities.set(entity.ID, entity);
+    condensedEntities.set(entityFile.ID, entityFile);
   });
 
   const collection: Structs.Collection = Collection.expandCondensedCollection(

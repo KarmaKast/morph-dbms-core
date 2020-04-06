@@ -18,14 +18,14 @@ export interface Entity {
   ID: string;
   Label: string | null;
   RelationClaims: Set<RelationClaim>;
-  Data?: Record<string, object>;
+  Data?: Map<string, unknown>;
 }
 
 export interface Collection {
   ID: string;
   Label: string | null;
-  Entities: Record<string, Entity>;
-  Relations: Record<string, Relation>;
+  Entities: Map<Entity["ID"], Entity>;
+  Relations: Map<Relation["ID"], Relation>;
 }
 
 // files
@@ -39,6 +39,8 @@ export interface RelationClaimDense
 export interface EntityDense extends Omit<Entity, "RelationClaims"> {
   RelationClaims: Array<RelationClaimDense>;
 }
+
+export type CondensedEntities = Map<string, EntityDense>;
 
 export interface CollectionDense
   extends Omit<Collection, "Entities" | "Relations"> {
