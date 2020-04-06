@@ -4,8 +4,8 @@ export interface Relation {
 }
 
 export enum Direction {
-  FromSelf = "->",
-  ToSelf = "<-",
+  SelfToTarget = "->",
+  TargetToSelf = "<-",
 }
 
 export interface RelationClaim {
@@ -18,34 +18,32 @@ export interface Entity {
   ID: string;
   Label: string | null;
   RelationClaims: Set<RelationClaim>;
-  Data?: object;
+  Data?: Map<string, unknown>;
 }
 
 export interface Collection {
   ID: string;
   Label: string | null;
-  Entities: { [key: string]: Entity };
-  Relations: { [key: string]: Relation };
+  Entities: Map<Entity["ID"], Entity>;
+  Relations: Map<Relation["ID"], Relation>;
 }
 
 // files
 
-export interface RelationClaimDense {
+export interface RelationClaimDense
+  extends Omit<RelationClaim, "To" | "Relation"> {
   To: Entity["ID"];
   Relation: Relation["ID"];
-  Direction: Direction;
 }
 
-export interface EntityDense {
-  ID: Entity["ID"];
-  Label: Entity["Label"];
+export interface EntityDense extends Omit<Entity, "RelationClaims"> {
   RelationClaims: Array<RelationClaimDense>;
-  Data?: object;
 }
 
-export interface CollectionDense {
-  ID: Collection["ID"];
-  Label: Collection["Label"];
+export type CondensedEntities = Map<string, EntityDense>;
+
+export interface CollectionDense
+  extends Omit<Collection, "Entities" | "Relations"> {
   Entities: Array<Entity["ID"]>;
   Relations: Array<Relation["ID"]>;
 }

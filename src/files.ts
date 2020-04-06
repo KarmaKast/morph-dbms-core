@@ -7,7 +7,7 @@ import { Collection } from ".";
 export function initDatabase(
   dataBasePath: string,
   mode: "init" | "reset" = "init"
-): Promise<void> {
+): Promise<string> {
   function init(): void {
     fs.mkdirSync(dataBasePath, { recursive: true });
     fs.mkdirSync(path.join(dataBasePath, "Entities"), { recursive: true });
@@ -22,36 +22,36 @@ export function initDatabase(
       }
       init();
       return new Promise((resolve) => {
-        console.log("reset done");
-        resolve();
+        const msg = "reset done";
+        resolve(msg);
       });
-
-      break;
     case "init":
       // check database folder integrity
       if (!fs.existsSync(dataBasePath)) {
         init();
       }
-      break;
+      return new Promise((resolve) => {
+        const msg = "init done";
+        resolve(msg);
+      });
+    default:
+      return new Promise((resolve, reject) => {
+        const msg = `expected 'init' | 'reset but received ${mode}`;
+        reject(msg);
+      });
   }
-  return new Promise((resolve, reject) => {
-    reject("idk");
-  });
 }
 
 export function writeEntity(
   entity: Structs.Entity,
   dataBasePath: string
 ): void {
-  fs.writeFile(
+  fs.writeFileSync(
     path.resolve(
       path.join(dataBasePath, "Entities", entity.ID + ".entity.json")
     ),
     JSON.stringify(Entity.condenseEntity(entity)),
-    { flag: "w+" },
-    () => {
-      //
-    }
+    { flag: "w+" }
   );
 }
 
@@ -59,15 +59,12 @@ export function writeRelation(
   relation: Structs.Relation,
   dataBasePath: string
 ): void {
-  fs.writeFile(
+  fs.writeFileSync(
     path.resolve(
       path.join(dataBasePath, "Relations", relation.ID + ".relation.json")
     ),
     JSON.stringify(relation),
-    { flag: "w+" },
-    () => {
-      //
-    }
+    { flag: "w+" }
   );
 }
 
@@ -75,22 +72,18 @@ export function writeCollection(
   collection: Structs.Collection,
   dataBasePath: string
 ): void {
-  fs.writeFile(
+  fs.writeFileSync(
     path.resolve(
       path.join(dataBasePath, "Collections", collection.ID + ".collection.json")
     ),
     JSON.stringify(Collection.condenseCollection(collection)),
-    { flag: "w+" },
-    (err) => {
-      if (err) throw err;
-      console.log("The file has been saved!");
-    }
+    { flag: "w+" }
   );
-  for (const entityID in collection.Entities) {
-    writeEntity(collection.Entities[entityID], dataBasePath);
+  for (const [, entity] of collection.Entities) {
+    writeEntity(entity, dataBasePath);
   }
-  for (const relationID in collection.Relations) {
-    writeRelation(collection.Relations[relationID], dataBasePath);
+  for (const [, relation] of collection.Relations) {
+    writeRelation(relation, dataBasePath);
   }
 }
 
@@ -145,18 +138,18 @@ export function readCollection(
   );
   console.log(condensedcollection);
 
-  const relations: Structs.Collection["Relations"] = {};
+  const relations: Structs.Collection["Relations"] = new Map();
   condensedcollection.Relations.forEach((relationID) => {
     const relation = readRelation(relationID, dataBasePath);
-    relations[relation.ID] = relation;
+    relations.set(relation.ID, relation);
   });
 
-  const condensedEntities: { [key: string]: Structs.EntityDense } = {};
-  const FirstPassEntities: Structs.Collection["Entities"] = {};
+  const condensedEntities: Structs.CondensedEntities = new Map();
+  const FirstPassEntities: Structs.Collection["Entities"] = new Map();
   condensedcollection.Entities.forEach((entityID) => {
     const [entity, entityFile] = readEntityPass1(dataBasePath, entityID);
-    FirstPassEntities[entity.ID] = entity;
-    condensedEntities[entityFile.ID] = entityFile;
+    FirstPassEntities.set(entity.ID, entity);
+    condensedEntities.set(entityFile.ID, entityFile);
   });
 
   const collection: Structs.Collection = Collection.expandCondensedCollection(

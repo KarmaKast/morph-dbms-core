@@ -1,6 +1,6 @@
 {
   "name": "@karmakast/morph-dbms-core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "a P2P graph DBMS",
   "main": "./lib/index.js",
   "types": "./lib/index.d.js",
@@ -27,7 +27,7 @@
     "url": "https://github.com/KarmaKast/morph-dbms-core/issues"
   },
   "devDependencies": {
-    "@types/node": "^13.9.8",
+    "@types/node": "^13.11.0",
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",

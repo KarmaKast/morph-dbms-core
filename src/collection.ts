@@ -7,10 +7,10 @@ export function updateRelations(
   collection: Structs.Collection
 ): Structs.Collection["Relations"] {
   const oldRelations = collection.Relations;
-  collection.Relations = {};
-  for (const entityID in collection.Entities) {
+  collection.Relations = new Map();
+  for (const [, entity] of collection.Entities) {
     const uniqueRelations = Entity.getUniqueRelations(
-      collection.Entities[entityID],
+      entity,
       collection.Relations
     );
     Object.assign(collection.Relations, uniqueRelations);
@@ -27,8 +27,8 @@ export function createNew(
   const collection: Structs.Collection = {
     ID: ID === undefined ? v1() : ID,
     Label: Label,
-    Entities: Entities === undefined ? {} : Entities,
-    Relations: Relations === undefined ? {} : Relations,
+    Entities: Entities === undefined ? new Map() : Entities,
+    Relations: Relations === undefined ? new Map() : Relations,
   };
 
   if (Relations === undefined) {
@@ -41,8 +41,8 @@ export function createNew(
 export function drop(
   entity: Structs.Entity,
   collection: Structs.Collection
-): void {
-  delete collection.Entities[entity.ID];
+): boolean {
+  return collection.Entities.delete(entity.ID);
 }
 
 export function condenseCollection(
@@ -51,11 +51,11 @@ export function condenseCollection(
   const res: Structs.CollectionDense = {
     ID: collection.ID,
     Label: collection.Label,
-    Entities: Object.keys(collection.Entities).map((key) => {
-      return collection.Entities[key].ID;
+    Entities: Array.from(collection.Entities.values()).map((entity) => {
+      return entity.ID;
     }),
-    Relations: Object.keys(collection.Relations).map((key) => {
-      return collection.Relations[key].ID;
+    Relations: Array.from(collection.Relations.values()).map((relation) => {
+      return relation.ID;
     }),
   };
   return res;
@@ -64,7 +64,7 @@ export function condenseCollection(
 export function expandCondensedCollection(
   condensedcollection: Structs.CollectionDense,
   relations: Structs.Collection["Relations"],
-  condensedEntities: { [key: string]: Structs.EntityDense },
+  condensedEntities: Structs.CondensedEntities,
   firstPassEntities: Structs.Collection["Entities"]
 ): Structs.Collection {
   const res: Structs.Collection = {
@@ -76,31 +76,67 @@ export function expandCondensedCollection(
 
   const secondPassEntities = firstPassEntities;
 
-  condensedcollection.Entities.forEach((entityID) => {
-    const entity = Entity.populateEntityRelationClaims(
-      condensedEntities[entityID],
-      (entityID) => {
-        return res.Entities[entityID];
-      },
-      (relationID) => {
-        return res.Relations[relationID];
-      }
-    );
-    secondPassEntities[entity.ID] = entity;
+  condensedcollection.Entities.map((entityID) => {
+    const condensedEntity = condensedEntities.get(entityID);
+    if (condensedEntity) {
+      const entity = Entity.populateEntityRelationClaims(
+        condensedEntity,
+        (entityID) => {
+          const resEntity = res.Entities.get(entityID);
+          if (resEntity) return resEntity;
+          else throw console.error("Entity now found");
+        },
+        (relationID) => {
+          const resRelation = res.Relations.get(relationID);
+          if (resRelation) return resRelation;
+          else throw console.error("Relation now found");
+        }
+      );
+      secondPassEntities.set(entity.ID, entity);
+    }
   });
   return res;
 }
 
-export function describe(collection: Structs.Collection): void {
-  console.log("--------------------------Collection--------------------------");
-  console.log("ID : ", collection.ID);
-  console.log("Label : ", collection.Label);
-  console.log("Entities : {");
-  for (const entityID in collection.Entities) {
-    Entity.describe(collection.Entities[entityID]);
+interface CollectionDescribed
+  extends Omit<Structs.Collection, "Entities" | "Relations"> {
+  Entities: Array<ReturnType<typeof Entity.describe>>;
+  Relations: Array<Structs.Relation>;
+}
+
+export function describe(
+  collection: Structs.Collection,
+  printToConsole = true,
+  noData = false,
+  dataHeightLimit = 10
+): CollectionDescribed {
+  //console.log("ID : ", collection.ID);
+  //console.log("Label : ", collection.Label);
+  //console.log("Entities : {");
+  //for (const entityID in collection.Entities) {
+  //  Entity.describe(collection.Entities[entityID]);
+  //}
+  //console.log("}");
+  //console.log("Relations :");
+  //console.log(Object.values(collection.Relations));
+
+  const log = {
+    ID: collection.ID,
+    Label: collection.Label,
+    Entities: Array.from(collection.Entities.values()).map((entity) => {
+      return Entity.describe(entity, false, noData, dataHeightLimit);
+    }),
+    Relations: Array.from(collection.Relations.values()),
+  } as CollectionDescribed;
+
+  if (printToConsole) {
+    console.log(
+      "--------------------------Collection--------------------------"
+    );
+    console.log(JSON.stringify(log, undefined, 2));
+    console.log(
+      "--------------------------------------------------------------"
+    );
   }
-  console.log("}");
-  console.log("Relations :");
-  console.log(collection.Relations);
-  console.log("--------------------------------------------------------------");
+  return log;
 }

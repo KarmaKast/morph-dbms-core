@@ -37,10 +37,10 @@ export function getUniqueRelations(
   entity: Structs.Entity,
   knownRelations: Structs.Collection["Relations"]
 ): Structs.Collection["Relations"] {
-  const relations: Structs.Collection["Relations"] = {};
+  const relations: Structs.Collection["Relations"] = new Map();
   for (const relationClaim of entity.RelationClaims.values()) {
     if (!Object.values(knownRelations).includes(relationClaim.Relation)) {
-      relations[relationClaim.Relation.ID] = relationClaim.Relation;
+      relations.set(relationClaim.Relation.ID, relationClaim.Relation);
     }
   }
   return relations;
@@ -93,6 +93,10 @@ export function condenseEntity(entity: Structs.Entity): Structs.EntityDense {
   return res;
 }
 
+/**
+ * ignores rel claims
+ * @param entityCondensed
+ */
 export function expandCondensedEntity(
   entityCondensed: Structs.EntityDense
 ): Structs.Entity {
@@ -107,20 +111,48 @@ export function expandCondensedEntity(
   return res;
 }
 
-export function describe(entity: Structs.Entity): void {
-  console.log(
-    "{\n  ID: ",
-    entity.ID,
-    "\n  Label: ",
-    entity.Label,
-    "\n  RelationClaims: ",
-    entity.RelationClaims.size === 0 ? "{}" : ""
-  );
-  for (const relClaim of entity.RelationClaims) {
+interface RelationClaimDescribed
+  extends Omit<Structs.RelationClaim, "To" | "Relation"> {
+  To: string;
+  Relation: string;
+}
+
+interface EntityDescribed
+  extends Omit<Structs.Entity, "RelationClaims" | "Data"> {
+  RelationClaims: RelationClaimDescribed[];
+  Data?: Record<string, unknown>;
+}
+
+export function describe(
+  entity: Structs.Entity,
+  printToConsole = true,
+  noData = false,
+  dataHeightLimit = 10
+): EntityDescribed {
+  const log: EntityDescribed = {
+    ID: entity.ID,
+    Label: entity.Label,
+    RelationClaims: Array.from(entity.RelationClaims.values()).map(
+      (relClaim) => {
+        return {
+          To: `{ ID: '${relClaim.To.ID}', Label: '${relClaim.To.Label}' }`,
+          Direction: relClaim.Direction,
+          Relation: `{ ID: '${relClaim.Relation.ID}', Label: '${relClaim.Relation.Label}' }`,
+        };
+      }
+    ),
+  };
+  if (!noData && entity.Data) {
+    log.Data = Object.fromEntries(entity.Data.entries());
+  }
+  if (printToConsole) {
     console.log(
-      "  ",
-      JSON.stringify(condenseRelationClaim(relClaim), undefined, 4)
+      "----------------------------Entity----------------------------"
+    );
+    console.log(JSON.stringify(log, undefined, 2));
+    console.log(
+      "--------------------------------------------------------------"
     );
   }
-  console.log("}");
+  return log;
 }
