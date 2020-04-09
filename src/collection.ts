@@ -1,7 +1,7 @@
 import { v1 } from "uuid";
 
-import * as Structs from "./structs";
-import * as Entity from "./entity";
+import { Structs } from ".";
+import { Entity } from ".";
 
 export function updateRelations(
   collection: Structs.Collection

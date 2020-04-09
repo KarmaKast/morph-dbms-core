@@ -1,6 +1,6 @@
 import { v1 } from "uuid";
 
-import * as Structs from "./structs";
+import { Structs } from ".";
 
 export function createNew(
   ID?: Structs.Entity["ID"],

@@ -1,5 +1,5 @@
-import * as Structs from "./structs";
-import * as Entity from "./entity";
+import { Structs } from ".";
+import { Entity } from ".";
 import * as fs from "fs";
 import * as path from "path";
 import { Collection } from ".";
