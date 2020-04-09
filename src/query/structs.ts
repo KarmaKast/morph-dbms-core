@@ -57,6 +57,22 @@ export type queriesUnion<V> =
   | BranchInQuery<V>;
 
 export class QueryTypeTests {
+  static isMetaData<R>(parsedQuery: queriesUnion<R>): parsedQuery is MetaData {
+    return (parsedQuery as MetaData).collectionID !== undefined;
+  }
+  static isBranchOutQuery<R>(
+    parsedQuery: queriesUnion<R>
+  ): parsedQuery is BranchOutQuery<R> {
+    return (parsedQuery as BranchOutQuery<R>).branchOutTasks !== undefined;
+  }
+  static isBranchInQuery<R>(
+    parsedQuery: queriesUnion<R>
+  ): parsedQuery is BranchInQuery<R> {
+    return (parsedQuery as BranchInQuery<R>).branchInTasks !== undefined;
+  }
+
+  // doing: queries
+
   static isHasLabelquery<R>(
     parsedQuery: queriesUnion<R>
   ): parsedQuery is HasLabelQuery {
@@ -79,15 +95,5 @@ export class QueryTypeTests {
     parsedQuery: queriesUnion<R>
   ): parsedQuery is FilterDataQuery {
     return (parsedQuery as FilterDataQuery).filterDataParams !== undefined;
-  }
-  static isBranchOutQuery<R>(
-    parsedQuery: queriesUnion<R>
-  ): parsedQuery is BranchOutQuery<R> {
-    return (parsedQuery as BranchOutQuery<R>).branchOutTasks !== undefined;
-  }
-  static isCollection<R>(
-    parsedQuery: queriesUnion<R>
-  ): parsedQuery is MetaData {
-    return (parsedQuery as MetaData).collectionID !== undefined;
   }
 }

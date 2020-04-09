@@ -26,11 +26,11 @@ export class QueryParser extends QueryBase {
     } else throw new Error("later");
   }
   branchOut(callback: (QueryObj: this) => void | this[]): this {
-    const nextQuery = new QueryParser(this.encodedQuery);
-    nextQuery.encodedQuery.push({
+    const metaData = this.encodedQuery[0] as MetaData;
+    this.encodedQuery.push({
       branchOutTasks: callback(this),
     });
-    return nextQuery as this;
+    return this;
   }
   branchIn(callback: (QueryObj: this) => void | this[]): this {
     const nextQuery = new QueryParser(this.encodedQuery);

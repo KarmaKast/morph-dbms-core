@@ -45,6 +45,20 @@ export function drop(
   return collection.Entities.delete(entity.ID);
 }
 
+export function merge(
+  collection: Structs.Collection,
+  collections: Structs.Collection[]
+): void {
+  collections.forEach((toMergeCollection) => {
+    toMergeCollection.Relations.forEach((relation) =>
+      collection.Relations.set(relation.ID, relation)
+    );
+    toMergeCollection.Entities.forEach((entity) =>
+      collection.Entities.set(entity.ID, entity)
+    );
+  });
+}
+
 export function condenseCollection(
   collection: Structs.Collection
 ): Structs.CollectionDense {

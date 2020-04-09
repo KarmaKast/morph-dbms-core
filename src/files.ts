@@ -136,7 +136,7 @@ export function readCollection(
       )
       .toString()
   );
-  console.log(condensedcollection);
+  //console.log(condensedcollection);
 
   const relations: Structs.Collection["Relations"] = new Map();
   condensedcollection.Relations.forEach((relationID) => {

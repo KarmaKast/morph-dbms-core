@@ -73,15 +73,23 @@ export class QueryCollection extends QueryBase {
     this.collection = collection;
   }
 
-  branchOut(callback: (QueryObj: this) => void): this {
-    callback(this);
+  branchOut(callback: (QueryObj: this) => void | this[]): this {
+    callback(new QueryCollection(this.collection, this.collectionID) as this);
     return this;
   }
 
   branchIn(callback: (QueryObj: this) => void | this[]): this {
     const QueryCollectionObjects = callback(this);
     if (QueryCollectionObjects && QueryCollectionObjects.length > 0) {
-      return this;
+      if (QueryCollectionObjects.length > 1) {
+        const collections = QueryCollectionObjects.map(
+          (value) => value.collection
+        );
+        Collection.merge(collections[0], collections.slice(1));
+        return new QueryCollection(collections[0], collections[0].ID) as this;
+      } else {
+        return QueryCollectionObjects[0] as this;
+      }
     } else {
       return this;
     }
@@ -212,10 +220,11 @@ export class QueryCollection extends QueryBase {
 
 export function runParsedQuery(
   encodedQuery: QueryParser["encodedQuery"],
-  dataBasePath: string
+  dataBasePath: string,
+  ...branchOut: ((queryObjCollection: Structs.Collection) => void)[]
 ): QueryCollection {
   const MetaData = encodedQuery[0];
-  if (QueryTypeTests.isCollection(MetaData)) {
+  if (QueryTypeTests.isMetaData(MetaData)) {
     MetaData.collection = Files.readCollection(
       MetaData.collectionID,
       dataBasePath
@@ -225,7 +234,7 @@ export function runParsedQuery(
       MetaData.collection.ID
     );
     encodedQuery.slice(1).forEach((parsedQuery) => {
-      const compromise = parsedQuery as queriesUnion<QueryCollection>;
+      const compromise = parsedQuery;
       if (QueryTypeTests.isHasLabelquery(compromise)) {
         queryObj = queryObj.hasLabel(...compromise.hasLabelParams);
       } else if (QueryTypeTests.isHasRelationClaimQuery(compromise)) {
@@ -239,6 +248,22 @@ export function runParsedQuery(
       } else if (QueryTypeTests.isBranchOutQuery(compromise)) {
         console.log(compromise.branchOutTasks);
         // todo: .
+        queryObj = queryObj.branchOut(() => {
+          if (compromise.branchOutTasks)
+            return compromise.branchOutTasks.map((task) => {
+              return runParsedQuery(task.encodedQuery, dataBasePath);
+            });
+        });
+      } else if (QueryTypeTests.isBranchInQuery(compromise)) {
+        // todo: run the branch in tasks and then merge the resulting QueryCollection objects
+        if (compromise.branchInTasks) {
+          queryObj = queryObj.branchIn(() => {
+            if (compromise.branchInTasks)
+              return compromise.branchInTasks.map((task) => {
+                return runParsedQuery(task.encodedQuery, dataBasePath);
+              });
+          });
+        }
       }
     });
 
