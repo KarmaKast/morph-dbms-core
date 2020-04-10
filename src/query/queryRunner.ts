@@ -218,10 +218,14 @@ export class QueryCollection extends QueryBase {
   }
 }
 
+export type branchOutCallbacksType = ((
+  queryObjCollection?: Structs.Collection
+) => branchOutCallbacksType | void)[];
+
 export function runParsedQuery(
   encodedQuery: QueryParser["encodedQuery"],
   dataBasePath: string,
-  ...branchOut: ((queryObjCollection: Structs.Collection) => void)[]
+  ...branchOuts: branchOutCallbacksType
 ): QueryCollection {
   const MetaData = encodedQuery[0];
   if (QueryTypeTests.isMetaData(MetaData)) {
@@ -234,6 +238,7 @@ export function runParsedQuery(
       MetaData.collection.ID
     );
     encodedQuery.slice(1).forEach((parsedQuery) => {
+      let branchOutCounter = 0;
       const compromise = parsedQuery;
       if (QueryTypeTests.isHasLabelquery(compromise)) {
         queryObj = queryObj.hasLabel(...compromise.hasLabelParams);
@@ -246,16 +251,24 @@ export function runParsedQuery(
       } else if (QueryTypeTests.isFilterDataQuery(compromise)) {
         queryObj = queryObj.filterData(...compromise.filterDataParams);
       } else if (QueryTypeTests.isBranchOutQuery(compromise)) {
-        console.log(compromise.branchOutTasks);
-        // todo: .
         queryObj = queryObj.branchOut(() => {
           if (compromise.branchOutTasks)
             return compromise.branchOutTasks.map((task) => {
-              return runParsedQuery(task.encodedQuery, dataBasePath);
+              if (branchOuts && branchOuts.length > branchOutCounter) {
+                let nextBranchouts = branchOuts[branchOutCounter]();
+                if (!nextBranchouts) nextBranchouts = [];
+                const res = runParsedQuery(
+                  task.encodedQuery,
+                  dataBasePath,
+                  ...nextBranchouts
+                );
+                branchOuts[branchOutCounter](res.collection);
+                branchOutCounter++;
+                return res;
+              } else return runParsedQuery(task.encodedQuery, dataBasePath);
             });
         });
       } else if (QueryTypeTests.isBranchInQuery(compromise)) {
-        // todo: run the branch in tasks and then merge the resulting QueryCollection objects
         if (compromise.branchInTasks) {
           queryObj = queryObj.branchIn(() => {
             if (compromise.branchInTasks)

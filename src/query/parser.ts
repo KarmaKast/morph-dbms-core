@@ -28,7 +28,9 @@ export class QueryParser extends QueryBase {
   branchOut(callback: (QueryObj: this) => void | this[]): this {
     const metaData = this.encodedQuery[0] as MetaData;
     this.encodedQuery.push({
-      branchOutTasks: callback(this),
+      branchOutTasks: callback(
+        new QueryParser(cloneDeep(this.encodedQuery)) as this
+      ),
     });
     return this;
   }
