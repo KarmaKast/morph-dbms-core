@@ -230,8 +230,8 @@ export function runParsedQuery(
   const MetaData = encodedQuery[0];
   if (QueryTypeTests.isMetaData(MetaData)) {
     MetaData.collection = Files.readCollection(
-      MetaData.collectionID,
-      dataBasePath
+      dataBasePath,
+      MetaData.collectionID
     );
     let queryObj = new QueryCollection(
       MetaData.collection,

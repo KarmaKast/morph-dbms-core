@@ -121,21 +121,54 @@ export function readRelation(
   return relation;
 }
 
+export function findCollectionWithLabel(
+  dataBasePath: string,
+  label: Structs.Collection["Label"]
+): Structs.CollectionDense[] | null {
+  const collectionsWithLabel: Structs.CollectionDense[] = [];
+  const files = fs.readdirSync(path.join(dataBasePath, "Collections"));
+  files.map((fileName) => {
+    const condensedcollection: Structs.CollectionDense = JSON.parse(
+      fs
+        .readFileSync(path.join(dataBasePath, "Collections", fileName))
+        .toString()
+    );
+    if (condensedcollection.Label === label)
+      collectionsWithLabel.push(condensedcollection);
+  });
+  if (collectionsWithLabel.length !== 0) return collectionsWithLabel;
+  else return null;
+}
+
 export function readCollection(
-  collectionID: Structs.Collection["ID"],
-  dataBasePath: string
+  dataBasePath: string,
+  collectionID?: Structs.Collection["ID"],
+  label?: Structs.Collection["Label"]
 ): Structs.Collection {
-  const condensedcollection: Structs.CollectionDense = JSON.parse(
-    fs
-      .readFileSync(
-        path.join(
-          dataBasePath,
-          "Collections",
-          collectionID + ".collection.json"
+  let condensedcollection: Structs.CollectionDense;
+  if (collectionID)
+    condensedcollection = JSON.parse(
+      fs
+        .readFileSync(
+          path.join(
+            dataBasePath,
+            "Collections",
+            collectionID + ".collection.json"
+          )
         )
-      )
-      .toString()
-  );
+        .toString()
+    );
+  else if (label) {
+    const condensedcollections = findCollectionWithLabel(dataBasePath, label);
+    if (condensedcollections) condensedcollection = condensedcollections[0];
+    else
+      throw new Error(
+        `No collection with label '${label}' exists at '${path.join(
+          dataBasePath,
+          "Collections"
+        )}'`
+      );
+  } else throw new Error("Must provide a label or a collection ID");
   //console.log(condensedcollection);
 
   const relations: Structs.Collection["Relations"] = new Map();
