@@ -54,18 +54,25 @@ export function getUniqueRelations(
  */
 export function populateEntityRelationClaims(
   condensedEntity: Structs.EntityDense,
-  getEntityCallback: (entityID: Structs.Entity["ID"]) => Structs.Entity,
-  getRelationCallback: (relationID: Structs.Relation["ID"]) => Structs.Relation
+  getEntityCallback: (entityID: Structs.Entity["ID"]) => Structs.Entity | null,
+  getRelationCallback: (
+    relationID: Structs.Relation["ID"]
+  ) => Structs.Relation | null
 ): Structs.Entity {
-  const resEntity: Structs.Entity = getEntityCallback(condensedEntity.ID);
-  condensedEntity.RelationClaims.forEach((relationClaim) => {
-    resEntity.RelationClaims.add({
-      To: getEntityCallback(relationClaim.To),
-      Direction: relationClaim.Direction,
-      Relation: getRelationCallback(relationClaim.Relation),
+  const resEntity = getEntityCallback(condensedEntity.ID);
+  if (resEntity) {
+    condensedEntity.RelationClaims.forEach((relationClaim) => {
+      const toEntity = getEntityCallback(relationClaim.To);
+      const relation = getRelationCallback(relationClaim.Relation);
+      if (toEntity && relation)
+        resEntity.RelationClaims.add({
+          To: toEntity,
+          Direction: relationClaim.Direction,
+          Relation: relation,
+        });
     });
-  });
-  return resEntity;
+    return resEntity;
+  } else throw new Error("idk");
 }
 
 function condenseRelationClaim(
@@ -87,7 +94,10 @@ export function condenseEntity(entity: Structs.Entity): Structs.EntityDense {
     ),
   };
   if (entity.Data !== undefined) {
-    res.Data = entity.Data;
+    res.Data = {};
+    entity.Data.forEach((value, key) => {
+      if (res.Data) res.Data[key] = value;
+    });
   }
   //console.log(res);
   return res;
@@ -106,7 +116,7 @@ export function expandCondensedEntity(
     RelationClaims: new Set(),
   };
   if (entityCondensed.Data !== undefined) {
-    res.Data = entityCondensed.Data;
+    res.Data = new Map(Object.entries(entityCondensed.Data));
   }
   return res;
 }

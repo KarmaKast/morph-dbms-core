@@ -36,7 +36,8 @@ export interface RelationClaimDense
   Relation: Relation["ID"];
 }
 
-export interface EntityDense extends Omit<Entity, "RelationClaims"> {
+export interface EntityDense extends Omit<Entity, "RelationClaims" | "Data"> {
+  Data?: Record<string, unknown>;
   RelationClaims: Array<RelationClaimDense>;
 }
 

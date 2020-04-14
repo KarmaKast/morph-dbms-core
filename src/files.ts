@@ -143,7 +143,13 @@ export function findCollectionWithLabel(
 export function readCollection(
   dataBasePath: string,
   collectionID?: Structs.Collection["ID"],
-  label?: Structs.Collection["Label"]
+  label?: Structs.Collection["Label"],
+  getExternalEntityCallback?: (
+    entityID: Structs.Entity["ID"]
+  ) => Structs.Entity | null,
+  getExternalRelationCallback?: (
+    relationID: Structs.Relation["ID"]
+  ) => Structs.Relation | null
 ): Structs.Collection {
   let condensedcollection: Structs.CollectionDense;
   if (collectionID)
@@ -189,7 +195,9 @@ export function readCollection(
     condensedcollection,
     relations,
     condensedEntities,
-    FirstPassEntities
+    FirstPassEntities,
+    getExternalEntityCallback,
+    getExternalRelationCallback
   );
   return collection;
 }

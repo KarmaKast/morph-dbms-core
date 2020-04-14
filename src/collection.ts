@@ -79,7 +79,13 @@ export function expandCondensedCollection(
   condensedcollection: Structs.CollectionDense,
   relations: Structs.Collection["Relations"],
   condensedEntities: Structs.CondensedEntities,
-  firstPassEntities: Structs.Collection["Entities"]
+  firstPassEntities: Structs.Collection["Entities"],
+  getExternalEntityCallback?: (
+    entityID: Structs.Entity["ID"]
+  ) => Structs.Entity | null,
+  getExternalRelationCallback?: (
+    relationID: Structs.Relation["ID"]
+  ) => Structs.Relation | null
 ): Structs.Collection {
   const res: Structs.Collection = {
     ID: condensedcollection.ID,
@@ -96,14 +102,30 @@ export function expandCondensedCollection(
       const entity = Entity.populateEntityRelationClaims(
         condensedEntity,
         (entityID) => {
-          const resEntity = res.Entities.get(entityID);
+          let resEntity: Structs.Entity | undefined | null = res.Entities.get(
+            entityID
+          );
+          if (!resEntity && getExternalEntityCallback)
+            resEntity = getExternalEntityCallback(entityID);
           if (resEntity) return resEntity;
-          else throw console.error("Entity now found");
+          else
+            throw new Error(
+              `Entity ${entityID} not found in ${condensedcollection.ID} and external resources`
+            );
         },
         (relationID) => {
-          const resRelation = res.Relations.get(relationID);
+          let resRelation:
+            | Structs.Relation
+            | undefined
+            | null = res.Relations.get(relationID);
+          //const resRelation = res.Relations.get(relationID);
+          if (!resRelation && getExternalRelationCallback)
+            resRelation = getExternalRelationCallback(relationID);
           if (resRelation) return resRelation;
-          else throw console.error("Relation now found");
+          else
+            throw new Error(
+              `Relation ${relationID} not found in ${condensedcollection.ID} and external resources`
+            );
         }
       );
       secondPassEntities.set(entity.ID, entity);
