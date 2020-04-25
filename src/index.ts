@@ -9,6 +9,7 @@ export * as ExperimentalQuery from "./query/index";
 
 import { v1 } from "uuid";
 import * as Structs from "./structs";
+
 export function createRelation(
   Label: Structs.Relation["Label"],
   ID?: Structs.Relation["ID"]

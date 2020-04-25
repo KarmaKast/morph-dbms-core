@@ -22,7 +22,7 @@ export function createNew(
 export function claimRelation(
   relation: Structs.Relation,
   direction: Structs.Direction,
-  ownerEntity: Structs.Entity,
+  claimantEntity: Structs.Entity,
   targetEntity: Structs.Entity
 ): void {
   const claim: Structs.RelationClaim = {
@@ -30,7 +30,26 @@ export function claimRelation(
     Relation: relation,
     To: targetEntity,
   };
-  ownerEntity.RelationClaims.add(claim);
+  claimantEntity.RelationClaims.add(claim);
+}
+
+/**
+ * drops all relation claims related to a target and return true if claimantEntity had a relClaim towards Target
+ * @param claimantEntity
+ * @param targetEntityID
+ */
+export function dropRelationClaimsTo(
+  claimantEntity: Structs.Entity,
+  targetEntityID: Structs.Entity["ID"]
+): boolean {
+  let res = false;
+  claimantEntity.RelationClaims.forEach((relClaim) => {
+    if (relClaim.To.ID === targetEntityID) {
+      res = true;
+      claimantEntity.RelationClaims.delete(relClaim);
+    }
+  });
+  return res;
 }
 
 export function getUniqueRelations(
@@ -48,9 +67,6 @@ export function getUniqueRelations(
 
 /**
  * populates relationclaims of a pass1 entity
- * @param condensedEntity
- * @param getEntityCallback
- * @param getRelationCallback
  */
 export function populateEntityRelationClaims(
   condensedEntity: Structs.EntityDense,

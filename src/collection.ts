@@ -38,11 +38,21 @@ export function createNew(
   return collection;
 }
 
-export function drop(
-  entity: Structs.Entity,
+export function dropEntity(
+  toDropEntityID: Structs.Entity["ID"],
   collection: Structs.Collection
-): boolean {
-  return collection.Entities.delete(entity.ID);
+): Structs.Entity["ID"][] {
+  console.log("why is console log not showing?");
+  const entitiesWithRelClaims: Structs.Entity["ID"][] = [];
+  collection.Entities.forEach((entityT) => {
+    if (entityT.ID !== toDropEntityID) {
+      console.log("trying drop relations from ", entityT.ID);
+      const hadRelClaims = Entity.dropRelationClaimsTo(entityT, toDropEntityID);
+      if (hadRelClaims) entitiesWithRelClaims.push(entityT.ID);
+    }
+  });
+  collection.Entities.delete(toDropEntityID);
+  return entitiesWithRelClaims;
 }
 
 export function merge(
