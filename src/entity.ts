@@ -3,10 +3,10 @@ import { v1 } from "uuid";
 import { Structs } from ".";
 
 export function createNew(
-  ID?: Structs.Entity["ID"],
   Label?: Structs.Entity["Label"],
   RelationClaims?: Structs.Entity["RelationClaims"],
-  Data?: Structs.Entity["Data"]
+  Data?: Structs.Entity["Data"],
+  ID?: Structs.Entity["ID"]
 ): Structs.Entity {
   const entity: Structs.Entity = {
     ID: ID === undefined ? v1() : ID,
