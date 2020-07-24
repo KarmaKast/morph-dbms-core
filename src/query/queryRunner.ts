@@ -85,7 +85,11 @@ export class QueryCollection extends QueryBase {
         const collections = QueryCollectionObjects.map(
           (value) => value.collection
         );
-        Collection.merge(collections[0], collections.slice(1));
+        collections
+          .slice(1)
+          .forEach((toMergeCollection) =>
+            Collection.merge(collections[0], toMergeCollection)
+          );
         return new QueryCollection(collections[0], collections[0].ID) as this;
       } else {
         return QueryCollectionObjects[0] as this;

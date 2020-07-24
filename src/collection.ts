@@ -42,7 +42,6 @@ export function dropEntity(
   toDropEntityID: Structs.Entity["ID"],
   collection: Structs.Collection
 ): Structs.Entity["ID"][] {
-  console.log("why is console log not showing?");
   const entitiesWithRelClaims: Structs.Entity["ID"][] = [];
   collection.Entities.forEach((entityT) => {
     if (entityT.ID !== toDropEntityID) {
@@ -55,18 +54,32 @@ export function dropEntity(
   return entitiesWithRelClaims;
 }
 
-export function merge(
-  collection: Structs.Collection,
-  collections: Structs.Collection[]
+export function insertEntity(
+  entityToInsert: Structs.Entity,
+  collection: Structs.Collection
 ): void {
-  collections.forEach((toMergeCollection) => {
-    toMergeCollection.Relations.forEach((relation) =>
-      collection.Relations.set(relation.ID, relation)
-    );
-    toMergeCollection.Entities.forEach((entity) =>
-      collection.Entities.set(entity.ID, entity)
-    );
-  });
+  collection.Entities.set(entityToInsert.ID, entityToInsert);
+  updateRelations(collection);
+}
+
+export function insertRelation(
+  toInsertRelation: Structs.Relation,
+  collection: Structs.Collection
+): void {
+  collection.Relations.set(toInsertRelation.ID, toInsertRelation);
+  updateRelations(collection);
+}
+
+export function merge(
+  collection1: Structs.Collection,
+  collection2: Structs.Collection
+): void {
+  collection2.Relations.forEach((relation) =>
+    collection1.Relations.set(relation.ID, relation)
+  );
+  collection2.Entities.forEach((entity) =>
+    collection1.Entities.set(entity.ID, entity)
+  );
 }
 
 export function condenseCollection(
